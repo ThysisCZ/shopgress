@@ -1,0 +1,109 @@
+{
+    "shoppingLists": [
+        {
+            "listId": "list_1",
+            "title": "Shopping List 1",
+            "ownerId": "1",
+            "memberIds": [
+                "1",
+                "2",
+                "3"
+            ],
+            "items": [
+                {
+                    "itemId": "item_1",
+                    "name": "Apple",
+                    "quantity": 2,
+                    "unit": null,
+                    "resolved": true
+                },
+                {
+                    "itemId": "item_2",
+                    "name": "Cheese",
+                    "quantity": 50,
+                    "unit": "g",
+                    "resolved": false
+                }
+            ],
+            "archived": false
+        },
+        {
+            "listId": "list_2",
+            "title": "Shopping List 2",
+            "ownerId": "2",
+            "memberIds": [
+                "2",
+                "1"
+            ],
+            "items": [
+                {
+                    "itemId": "item_3",
+                    "name": "Bread",
+                    "quantity": 1,
+                    "unit": "pc",
+                    "resolved": false
+                },
+                {
+                    "itemId": "item_4",
+                    "name": "Milk",
+                    "quantity": 2,
+                    "unit": "l",
+                    "resolved": false
+                }
+            ],
+            "archived": false
+        },
+        {
+            "listId": "list_3",
+            "title": "Shopping List 3",
+            "ownerId": "1",
+            "memberIds": [
+                "1",
+                "4",
+                "5"
+            ],
+            "items": [
+                {
+                    "itemId": "item_5",
+                    "name": "Cake",
+                    "quantity": 1,
+                    "unit": "pc",
+                    "resolved": true
+                }
+            ],
+            "archived": true
+        }
+    ],
+    "users": [
+        {
+            "id": "1",
+            "name": "Alice"
+        },
+        {
+            "id": "2",
+            "name": "Bob"
+        },
+        {
+            "id": "3",
+            "name": "Carol"
+        },
+        {
+            "id": "4",
+            "name": "Steve"
+        },
+        {
+            "id": "5",
+            "name": "Layla"
+        }
+    ],
+    "languages": [
+        {
+            "id": "EN",
+            "name": "English"
+        },
+        {
+            "id": "CZ",
+            "name": "Čeština"
+        }
+    ]
+}
