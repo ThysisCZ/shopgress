@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Create user context
 const UserContext = createContext();
@@ -15,37 +16,64 @@ export function UserProvider({ children }) {
     const [token, setToken] = useState(null);
     const [logoutCall, setLogoutCall] = useState("inactive");
 
-    // Load user data from localStorage on mount
-    useEffect(() => {
-        const storedToken = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
-        if (storedToken && storedUser) {
-            setToken(storedToken);
-            setUser(JSON.parse(storedUser));
+    const getSession = async () => {
+        try {
+            const storedUser = await AsyncStorage.getItem('user');
+            const storedToken = await AsyncStorage.getItem('token');
+
+            if (!storedUser || !storedToken) {
+                return null;
+            }
+
+            const sessionData = {
+                user: JSON.parse(storedUser),
+                token: storedToken
+            };
+
+            return sessionData;
+        } catch (e) {
+            console.error("Failed to load user session from storage", e);
+            return null;
         }
+    };
+
+    // Load user session data from AsyncStorage on mount
+    useEffect(() => {
+        const loadSession = async () => {
+            const sessionData = await getSession();
+
+            if (sessionData) {
+                setUser(sessionData.user);
+                setToken(sessionData.token);
+            }
+        }
+        loadSession();
     }, []);
 
     // Login function - stores user data and token
-    const login = (userData, authToken) => {
-        setUser(userData);
-        setToken(authToken);
+    const login = async (userData, authToken) => {
+        try {
+            await AsyncStorage.setItem('user', JSON.stringify(userData));
+            await AsyncStorage.setItem('token', authToken);
 
-        // Persist to localStorage
-        localStorage.setItem('token', authToken);
-        localStorage.setItem('user', JSON.stringify(userData));
+            setUser(userData);
+            setToken(authToken);
+        } catch (e) {
+            console.error("Failed to save user session to storage", e);
+        }
     };
 
     // Logout function - clears everything
     const logout = () => {
         setLogoutCall("pending");
 
-        setTimeout(() => {
+        setTimeout(async () => {
             setUser(null);
             setToken(null);
 
-            // Clear localStorage
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
+            // Clear AsyncStorage
+            await AsyncStorage.removeItem('user');
+            await AsyncStorage.removeItem('token');
 
             setLogoutCall("success");
         }, 2000);

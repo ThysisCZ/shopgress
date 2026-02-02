@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, Text, TextInput, TouchableOpacity, Dimensions } from 'react-native';
-import Icon from '@mdi/react';
-import { mdiEye, mdiEyeOff } from '@mdi/js';
-import { useUserContext } from '../../context/UserContext';
-import { useLanguageContext } from '../../context/LanguageContext';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useUserContext } from '../context/UserContext';
+import { useLanguageContext } from '../context/LanguageContext';
 import { useRouter } from 'expo-router';
 
 interface UserData {
@@ -106,7 +105,7 @@ export default function LoginScreen() {
         password: ''
     }
 
-    const SERVER_URI = process.env.REACT_APP_SERVER_URI;
+    const SERVER_URI = process.env.EXPO_PUBLIC_SERVER_URI;
 
     const [validated, setValidated] = useState(false);
     const [formData, setFormData] = useState(defaultForm);
@@ -117,9 +116,10 @@ export default function LoginScreen() {
     const { currentLanguage } = useLanguageContext();
     const router = useRouter();
 
+    // Navigate to lists after login
     useEffect(() => {
         if (user) {
-            router.replace('/register');
+            router.replace('/shoppingLists');
         }
     }, [user, router]);
 
@@ -157,16 +157,15 @@ export default function LoginScreen() {
                 setValidated(false);
 
                 setTimeout(() => {
-                    router.replace('/register');
+                    router.replace('/shoppingLists');
                 }, 1000);
             } else {
                 setLoginCall({ state: "error", error: data.message });
                 setMessage({ type: 'error', text: currentLanguage?.id === "EN" ? "Incorrect email or password." : "Nesprávný email nebo heslo." });
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error('Login error:', e);
-            const message = e instanceof Error ? e.message : String(e);
-            setLoginCall({ state: "error", error: message });
+            setLoginCall({ state: "error", error: e.message });
             setMessage({ type: 'error', text: currentLanguage?.id === "EN" ? "Network error. Please try again." : "Chyba sítě. Zkuste to prosím znovu." });
         }
     }
@@ -210,7 +209,10 @@ export default function LoginScreen() {
                             style={styles.togglePasswordBtn}
                             onPress={() => setShowPassword(!showPassword)}
                         >
-                            {showPassword ? <Icon path={mdiEyeOff} size={1} /> : <Icon path={mdiEye} size={1} />}
+                            {showPassword ?
+                                <MaterialCommunityIcons name="eye" size={24} /> :
+                                <MaterialCommunityIcons name="eye-off" size={24} />
+                            }
                         </TouchableOpacity>
                     </View>
                     {validated && formData.password.length === 0 && (
@@ -240,7 +242,7 @@ export default function LoginScreen() {
                 </View>
 
                 <TouchableOpacity
-                    onPress={() => router.push("/register")}
+                    onPress={() => router.replace("/forgotPassword")}
                     style={{ marginTop: 20, alignItems: 'center' }}
                 >
                     <Text style={styles.link}>
@@ -251,7 +253,7 @@ export default function LoginScreen() {
                 <View style={styles.authButton}>
                     <TouchableOpacity
                         disabled={loginCall.state === "pending"}
-                        onPress={() => router.push("/register")}
+                        onPress={() => router.replace("/register")}
                         style={{
                             backgroundColor: loginCall.state === "pending" ? '#ccc' : '#6c757d',
                             paddingVertical: 12,

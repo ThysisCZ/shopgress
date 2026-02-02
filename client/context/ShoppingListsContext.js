@@ -2,8 +2,8 @@ import { createContext, useContext, useState, useRef, useEffect } from 'react';
 import mockData from '../mockData.json';
 import { useUserContext } from './UserContext';
 
-const SERVER_URI = process.env.REACT_APP_SERVER_URI;
-const USE_MOCKS = process.env.REACT_APP_USE_MOCKS === "true";
+const SERVER_URI = process.env.EXPO_PUBLIC_SERVER_URI;
+const USE_MOCKS = process.env.EXPO_PUBLIC_USE_MOCKS === "true";
 
 // Create shopping lists context
 const ShoppingListsContext = createContext();

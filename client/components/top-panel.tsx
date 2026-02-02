@@ -1,11 +1,11 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import Icon from '@mdi/react';
-import { mdiThemeLightDark, mdiLogout } from '@mdi/js';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useUserContext } from '@/context/UserContext';
 import { useModeContext } from '@/context/ModeContext';
 import { useLanguageContext } from '@/context/LanguageContext';
 import LanguageSelector from '@/components/language-selector';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Language {
     key: string;
@@ -23,39 +23,50 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#dee2e6',
     },
-    userInfo: {
-        color: '#333',
-        fontSize: 14,
-        fontWeight: '500',
-    },
     button: {
+        backgroundColor: 'aqua',
         padding: 8,
         borderRadius: 4,
-    },
+    }
 });
 
 export default function TopPanel() {
-    const { logout, logoutCall } = useUserContext();
+    const { user, logout, logoutCall } = useUserContext();
     const { mode, setMode } = useModeContext();
     const { languages, currentLanguage, setCurrentLanguage } = useLanguageContext();
     const router = useRouter();
 
+    const saveMode = async (mode: string) => {
+        try {
+            await AsyncStorage.setItem('mode', mode);
+            setMode(mode);
+        } catch (e) {
+            console.error("Failed to save language to storage", e);
+        }
+    };
+
     const handleModeChange = () => {
         if (mode === "light") {
-            setMode("dark");
-            localStorage.setItem('mode', "dark");
+            saveMode("dark")
         } else {
-            setMode("light");
-            localStorage.setItem('mode', "light");
+            saveMode("light")
         }
     }
+
+    const saveLanguage = async (id: string, name: string) => {
+        try {
+            await AsyncStorage.setItem('language', JSON.stringify({ id, name }));
+            setCurrentLanguage({ id, name });
+        } catch (e) {
+            console.error("Failed to save language to storage", e);
+        }
+    };
 
     const handleLanguageChange = (id: string) => {
         const languageData = languages.find((language: Language) => language.id === id);
 
         if (languageData) {
-            setCurrentLanguage(languageData);
-            localStorage.setItem('language', JSON.stringify(languageData));
+            saveLanguage(languageData.id, languageData.name)
         }
     }
 
@@ -66,43 +77,44 @@ export default function TopPanel() {
 
     return (
         <View style={styles.topPanel}>
-            <TouchableOpacity
-                disabled={logoutCall === "pending"}
-                onPress={handleLogout}
-                style={styles.button}
-            >
-                <div style={{ display: "flex", flexDirection: "row", gap: 5 }}>
-                    <Icon path={mdiLogout} size={1} color="#333" />
-                    <Text style={{ marginTop: 2 }}>
-                        {logoutCall === "pending" ?
-                            <div>
-                                {currentLanguage.id === "EN" ? "Loading..." : "Odhlašování..."}
-                            </div> :
-                            <div>
-                                {currentLanguage.id === "EN" ? "Logout" : "Odhlásit se"}
-                            </div>
-                        }
-                    </Text>
-                </div>
-            </TouchableOpacity>
-            <div style={{ display: "flex", flexDirection: "column", gap: 5, marginTop: 3, marginRight: 3 }}>
-                <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <View>
+                {user &&
+                    <TouchableOpacity
+                        disabled={logoutCall === "pending"}
+                        onPress={handleLogout}
+                        style={styles.button}
+                    >
+                        <View style={{ flex: 1, flexDirection: "row", gap: 5 }}>
+                            <MaterialCommunityIcons name="logout" size={24} color="#333" />
+                            <Text style={{ marginTop: 2 }}>
+                                {logoutCall === "pending" ?
+                                    (currentLanguage.id === "EN" ? "Loading..." : "Odhlašování...") :
+                                    (currentLanguage.id === "EN" ? "Logout" : "Odhlásit se")
+                                }
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
+                }
+            </View>
+            <View style={{ flex: 1, flexDirection: "column", gap: 5, marginTop: 3, marginRight: 3 }}>
+                <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 5 }}>
                     <Text style={{ marginBottom: 3 }}>{currentLanguage.id === "EN" ? "Language" : "Jazyk"}:</Text>
                     <LanguageSelector
                         languages={languages}
+                        selectedLanguageId={currentLanguage.id}
                         setLanguage={handleLanguageChange}
                     />
-                </div>
-                <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 5 }}>
+                </View>
+                <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 5 }}>
                     <Text style={{ marginBottom: 3 }}>{currentLanguage.id === "EN" ? "Mode" : "Režim"}:</Text>
                     <TouchableOpacity
                         onPress={handleModeChange}
                         style={styles.button}
                     >
-                        <Icon path={mdiThemeLightDark} size={1} color="#333" />
+                        <MaterialCommunityIcons name="theme-light-dark" size={24} color="#333" />
                     </TouchableOpacity>
-                </div>
-            </div>
+                </View>
+            </View>
         </View>
     );
 }

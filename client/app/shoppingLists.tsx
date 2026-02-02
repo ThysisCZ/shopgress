@@ -1,98 +1,341 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from "react";
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity, ActivityIndicator } from "react-native";
+import { Card, Checkbox, Switch, List, Button, Divider } from "react-native-paper";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { useUserContext } from "../context/UserContext";
+import { useShoppingListsContext } from "../context/ShoppingListsContext";
+import { useModeContext } from "../context/ModeContext";
+import { useLanguageContext } from "../context/LanguageContext";
+import AddListModal from "../components/AddListModal";
+import DeleteListModal from "../components/DeleteListModal";
+import AddItemModal from "../components/AddItemModal";
+import DeleteItemModal from "../components/DeleteItemModal";
+import ShoppingListChart from "../components/ShoppingListChart";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const SERVER_URI = process.env.EXPO_PUBLIC_SERVER_URI;
+const USE_MOCKS = process.env.EXPO_PUBLIC_USE_MOCKS === "true";
 
-export default function ShoppingLists() {
+interface ItemData {
+    _id: string;
+    name: string;
+    quantity: number;
+    unit: string | null;
+    resolved: boolean;
+}
+
+interface ListData {
+    _id: string;
+    title: string;
+    ownerId: string;
+    memberIds: string[];
+    archived: boolean;
+    items: ItemData[];
+}
+
+export default function ShoppingLists({ navigation }: any) {
+    const { user, token, setUsers } = useUserContext();
+    const {
+        getAllLists,
+        getListsByUser,
+        getListById,
+        archiveList,
+        unarchiveList,
+        deleteList,
+        addList,
+        updateList,
+        showArchived,
+        setShowArchived,
+    } = useShoppingListsContext();
+    const { mode } = useModeContext();
+    const { currentLanguage } = useLanguageContext();
+
+    const [addListVisible, setAddListVisible] = useState(false);
+    const [deleteListVisible, setDeleteListVisible] = useState(false);
+    const [addItemVisible, setAddItemVisible] = useState(false);
+    const [deleteItemVisible, setDeleteItemVisible] = useState(false);
+
+    const [selectedList, setSelectedList] = useState<ListData | null>(null);
+    const [selectedItem, setSelectedItem] = useState<ItemData | null>(null);
+
+    const [allLists, setAllLists] = useState<ListData[]>([]);
+    const [userLists, setUserLists] = useState<ListData[]>([]);
+
+    const [allListsCall, setAllListsCall] = useState<{ state: string; allData?: ListData[]; error?: string }>({ state: "pending" });
+    const [userListsCall, setUserListsCall] = useState<{ state: string; userData?: ListData[]; error?: string }>({ state: "pending" });
+
+    const [listsAccordionOpen, setListsAccordionOpen] = useState(true);
+    const [statsAccordionOpen, setStatsAccordionOpen] = useState(false);
+
+    const items = selectedList?.items || [];
+
+    const refreshLists = async () => {
+        setAllListsCall({ state: "pending" });
+        setUserListsCall({ state: "pending" });
+
+        try {
+            const allData = await getAllLists();
+            const userData = await getListsByUser(user.id);
+
+            if (allData) setAllListsCall({ state: "success", allData });
+            else setAllListsCall({ state: "error", error: "Failed to load all lists" });
+
+            if (userData) setUserListsCall({ state: "success", userData });
+            else setUserListsCall({ state: "error", error: "Failed to load user lists" });
+
+            if (allData) setAllLists(allData);
+            if (userData) setUserLists(userData);
+        } catch (e: any) {
+            setAllListsCall({ state: "error", error: e.message });
+            setUserListsCall({ state: "error", error: e.message });
+        }
+    };
+
+    const getAllUsers = async () => {
+        try {
+            const res = await fetch(`${SERVER_URI}/user/list`, { headers: { Authorization: `Bearer ${token}` } });
+            const result = await res.json();
+            setUsers(result.data);
+        } catch (e: any) {
+            console.error("Error fetching users:", e.message);
+        }
+    };
+
+    useEffect(() => {
+        getAllUsers();
+        refreshLists();
+    }, []);
+
+    useEffect(() => {
+        refreshLists();
+    }, [showArchived]);
+
+    useEffect(() => {
+        if (!user) navigation.navigate("Login");
+    }, [user]);
+
+    const isOwner = (list: ListData) => list.ownerId === user?.id;
+
+    const handleAddItemShow = (list: ListData) => {
+        setSelectedList(list);
+        setAddItemVisible(true);
+    };
+
+    const handleDeleteItemShow = (list: ListData, item: ItemData) => {
+        setSelectedList(list);
+        setSelectedItem(item);
+        setDeleteItemVisible(true);
+    };
+
+    const handleItemAdded = async (item: ItemData) => {
+        if (!selectedList) return;
+        const updatedItems = [...items, item];
+
+        if (USE_MOCKS) await updateList({ ...selectedList, items: updatedItems });
+        else
+            await fetch(`${SERVER_URI}/shoppingList/update/${selectedList._id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ items: updatedItems }),
+            });
+
+        refreshLists();
+    };
+
+    const handleItemResolved = async (listId: string, itemId: string) => {
+        const list = (await getListById(listId)) as ListData;
+        const updatedItems = list.items.map((item) => (item._id === itemId ? { ...item, resolved: !item.resolved } : item));
+
+        if (USE_MOCKS) await updateList({ ...list, items: updatedItems });
+        else await fetch(`${SERVER_URI}/shoppingList/update/${listId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ items: updatedItems }),
+        });
+
+        refreshLists();
+    };
+
+    const handleItemDelete = async (item: ItemData) => {
+        if (!selectedList) return;
+        const updatedItems = selectedList.items.filter((i) => i._id !== item._id);
+
+        if (USE_MOCKS) await updateList({ ...selectedList, items: updatedItems });
+        else await fetch(`${SERVER_URI}/shoppingList/update/${selectedList._id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ items: updatedItems }),
+        });
+
+        refreshLists();
+    };
+
+    const handleListAdd = async (newList: ListData) => {
+        if (USE_MOCKS) await addList(newList);
+        else await fetch(`${SERVER_URI}/shoppingList/create`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify(newList),
+        });
+        refreshLists();
+    };
+
+    const handleListDelete = async (listId: string) => {
+        setDeleteListVisible(false);
+        setSelectedList(null);
+
+        if (USE_MOCKS) await deleteList(listId);
+        else await fetch(`${SERVER_URI}/shoppingList/delete/${listId}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+
+        refreshLists();
+    };
+
+    const handleArchive = async (listId: string) => {
+        const list = await getListById(listId);
+
+        if (USE_MOCKS) {
+            list.archived ? await unarchiveList(listId) : await archiveList(listId);
+        } else {
+            await fetch(`${SERVER_URI}/shoppingList/update/${listId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ archived: !list.archived }),
+            });
+        }
+
+        refreshLists();
+    };
+
+    const handleViewDetail = (listId: string) => navigation.navigate("Detail", { listId });
+
+    const renderQuantity = (item: ItemData) => {
+        if (!item.quantity) return "";
+        if (currentLanguage.id === "EN") return `${item.quantity} ${item.unit || ""}`;
+
+        const unitMap: Record<string, string> = { tsp: "ČL", tbsp: "PL", pc: "ks", c: "hrn." };
+        const translatedUnit = item.unit ? unitMap[item.unit] || item.unit : "";
+        return `${item.quantity} ${translatedUnit}`;
+    };
+
     return (
-        <ParallaxScrollView
-            headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-            headerImage={
-                <Image
-                    source={require('@/assets/images/partial-react-logo.png')}
-                    style={styles.reactLogo}
-                />
-            }>
-            <ThemedView style={styles.titleContainer}>
-                <ThemedText type="title">Welcome!</ThemedText>
-                <HelloWave />
-            </ThemedView>
-            <ThemedView style={styles.stepContainer}>
-                <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-                <ThemedText>
-                    Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-                    Press{' '}
-                    <ThemedText type="defaultSemiBold">
-                        {Platform.select({
-                            ios: 'cmd + d',
-                            android: 'cmd + m',
-                            web: 'F12',
-                        })}
-                    </ThemedText>{' '}
-                    to open developer tools.
-                </ThemedText>
-            </ThemedView>
-            <ThemedView style={styles.stepContainer}>
-                <Link href="/modal">
-                    <Link.Trigger>
-                        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-                    </Link.Trigger>
-                    <Link.Preview />
-                    <Link.Menu>
-                        <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-                        <Link.MenuAction
-                            title="Share"
-                            icon="square.and.arrow.up"
-                            onPress={() => alert('Share pressed')}
-                        />
-                        <Link.Menu title="More" icon="ellipsis">
-                            <Link.MenuAction
-                                title="Delete"
-                                icon="trash"
-                                destructive
-                                onPress={() => alert('Delete pressed')}
-                            />
-                        </Link.Menu>
-                    </Link.Menu>
-                </Link>
+        <ScrollView style={[styles.container, { backgroundColor: mode === "light" ? "#fff" : "#000" }]}>
+            <View style={styles.header}>
+                <Text style={[styles.title, { color: mode === "light" ? "#000" : "#fff" }]}>{currentLanguage.id === "EN" ? "Shopping Lists" : "Nákupní seznamy"}</Text>
 
-                <ThemedText>
-                    {`Tap the Explore tab to learn more about what's included in this starter app.`}
-                </ThemedText>
-            </ThemedView>
-            <ThemedView style={styles.stepContainer}>
-                <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-                <ThemedText>
-                    {`When you're ready, run `}
-                    <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-                    <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-                    <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-                    <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-                </ThemedText>
-            </ThemedView>
-        </ParallaxScrollView>
+                <View style={styles.switchRow}>
+                    <Text style={{ color: mode === "light" ? "#000" : "#fff" }}>{currentLanguage.id === "EN" ? "Show archived" : "Zobrazit uložené"}</Text>
+                    <Switch value={showArchived} onValueChange={() => setShowArchived(!showArchived)} />
+                </View>
+
+                <Button mode="contained" icon="plus" onPress={() => setAddListVisible(true)} style={{ marginTop: 10 }}>
+                    {currentLanguage.id === "EN" ? "Add list" : "Přidat seznam"}
+                </Button>
+            </View>
+
+            {(allListsCall.state === "pending" || userListsCall.state === "pending") ? (
+                <ActivityIndicator size="large" color={mode === "light" ? "black" : "white"} style={{ marginTop: 50 }} />
+            ) : (
+                <List.Section>
+                    <List.Accordion title={currentLanguage.id === "EN" ? "Lists" : "Seznamy"} expanded={listsAccordionOpen} onPress={() => setListsAccordionOpen(!listsAccordionOpen)}>
+                        {userLists.length === 0 ? (
+                            <Text style={{ textAlign: "center", marginVertical: 20, color: "gray" }}>{currentLanguage.id === "EN" ? "No shopping lists found." : "Nejsou tu žádné seznamy."}</Text>
+                        ) : (
+                            userLists.map((list) => (
+                                <Card key={list._id} style={styles.card}>
+                                    <Card.Title title={list.title} right={() => <Button icon="plus" mode="contained" onPress={() => handleAddItemShow(list)}>{currentLanguage.id === "EN" ? "Item" : "Položka"}</Button>} />
+                                    <Card.Content>
+                                        {list.items.length === 0 ? (
+                                            <Text style={{ textAlign: "center", color: "gray" }}>{currentLanguage.id === "EN" ? "No items" : "Žádné položky"}</Text>
+                                        ) : (
+                                            list.items.map((item) => (
+                                                <View key={item._id} style={styles.itemRow}>
+                                                    <Checkbox status={item.resolved ? "checked" : "unchecked"} onPress={() => handleItemResolved(list._id, item._id)} />
+                                                    <Text style={{ textDecorationLine: item.resolved ? "line-through" : "none", flex: 1, color: mode === "light" ? "#000" : "#fff" }}>
+                                                        {item.name} {renderQuantity(item)}
+                                                    </Text>
+                                                    <TouchableOpacity onPress={() => handleDeleteItemShow(list, item)}>
+                                                        <Icon name="close" size={20} color="red" />
+                                                    </TouchableOpacity>
+                                                </View>
+                                            ))
+                                        )}
+                                    </Card.Content>
+                                    <Card.Actions>
+                                        {isOwner(list) && (
+                                            <>
+                                                <Button icon="delete" mode="contained" onPress={() => setDeleteListVisible(true)}>{currentLanguage.id === "EN" ? "Delete" : "Smazat"}</Button>
+                                                <Button icon={list.archived ? "archive-off" : "archive"} mode="contained" onPress={() => handleArchive(list._id)}>
+                                                    {list.archived ? (currentLanguage.id === "EN" ? "Unarchive" : "Obnovit") : (currentLanguage.id === "EN" ? "Archive" : "Uložit")}
+                                                </Button>
+                                            </>
+                                        )}
+                                        <Button mode="contained" onPress={() => handleViewDetail(list._id)}>Detail</Button>
+                                    </Card.Actions>
+                                </Card>
+                            ))
+                        )}
+                    </List.Accordion>
+
+                    <List.Accordion title={currentLanguage.id === "EN" ? "Statistics" : "Statistiky"} expanded={statsAccordionOpen} onPress={() => setStatsAccordionOpen(!statsAccordionOpen)}>
+                        <ShoppingListChart userLists={userLists} />
+                    </List.Accordion>
+                </List.Section>
+            )}
+
+            <Divider style={{ marginVertical: 20 }} />
+
+            <AddListModal
+                visible={addListVisible}
+                onDismiss={() => setAddListVisible(false)}
+                onAdd={(name: string) => handleListAdd({
+                    _id: "",
+                    title: name,
+                    ownerId: user.id,
+                    memberIds: [user.id],
+                    archived: false,
+                    items: []
+                })}
+                existingLists={allLists.map(list => list.title)}
+            />
+
+            <DeleteListModal
+                visible={deleteListVisible}
+                onDismiss={() => setDeleteListVisible(false)}
+                onDelete={() => selectedList && handleListDelete(selectedList._id)}
+                listTitle={selectedList?.title}
+                language={currentLanguage.id}
+            />
+
+            <AddItemModal
+                visible={addItemVisible}
+                onDismiss={() => setAddItemVisible(false)}
+                onAdd={(item: ItemData) => {
+                    handleItemAdded({
+                        _id: "",
+                        name: item.name,
+                        quantity: item.quantity,
+                        unit: item.unit || null,
+                        resolved: false
+                    });
+                }}
+                existingItems={items.map(item => item.name)}
+            />
+
+            <DeleteItemModal
+                visible={deleteItemVisible}
+                onDismiss={() => setDeleteItemVisible(false)}
+                onDelete={() => selectedItem && handleItemDelete(selectedItem)}
+                itemName={selectedItem?.name}
+                language={currentLanguage.id}
+            />
+        </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    titleContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    stepContainer: {
-        gap: 8,
-        marginBottom: 8,
-    },
-    reactLogo: {
-        height: 178,
-        width: 290,
-        bottom: 0,
-        left: 0,
-        position: 'absolute',
-    },
+    container: { flex: 1, padding: 10 },
+    header: { marginBottom: 20 },
+    title: { fontSize: 24, fontWeight: "bold" },
+    switchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginVertical: 10 },
+    card: { marginVertical: 5 },
+    itemRow: { flexDirection: "row", alignItems: "center", paddingVertical: 5 },
 });

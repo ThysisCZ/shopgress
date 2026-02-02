@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import mockData from '../mockData.json';
 
 // Create language context
@@ -18,17 +19,38 @@ export function LanguageProvider({ children }) {
 
     const languages = mockData.languages;
 
+    const getLanguage = async () => {
+        try {
+            const storedLanguage = await AsyncStorage.getItem('language');
+
+            if (!storedLanguage) {
+                return null
+            }
+
+            return JSON.parse(storedLanguage)
+        } catch (e) {
+            console.error("Failed to load language from storage", e);
+            return null;
+        }
+    };
+
+    // Set language context with AsyncStorage on mount
+    useEffect(() => {
+        const loadLanguage = async () => {
+            const storedLanguage = await getLanguage();
+
+            if (storedLanguage) {
+                setCurrentLanguage(storedLanguage);
+            }
+        }
+        loadLanguage();
+    }, []);
+
     const value = {
         languages,
         currentLanguage,
         setCurrentLanguage
     }
-
-    // Set language context with localStorage on mount
-    useEffect(() => {
-        const storedLanguage = localStorage.getItem('language');
-        setCurrentLanguage(JSON.parse(storedLanguage));
-    }, []);
 
     return (
         <LanguageContext.Provider value={value}>
