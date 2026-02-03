@@ -1,5 +1,4 @@
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
@@ -27,17 +26,18 @@ function RootLayoutContent() {
     }, [user, router]);
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, marginTop: 25 }}>
             <TopPanel />
             <View style={{ flex: 1 }}>
                 <Stack>
                     <Stack.Screen name="index" options={{ headerShown: false }} />
                     <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
                     <Stack.Screen name="login" options={{ headerShown: false }} />
-                    <Stack.Screen name="shoppingLists" options={{ headerShown: false }} />
+                    <Stack.Screen name="register" options={{ headerShown: false }} />
+                    <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
+                    <Stack.Screen name="shopping-lists" options={{ headerShown: false }} />
                 </Stack>
             </View>
-            <StatusBar style="auto" />
         </View>
     );
 }

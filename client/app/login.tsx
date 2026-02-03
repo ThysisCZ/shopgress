@@ -67,12 +67,12 @@ const styles = StyleSheet.create({
         borderRadius: 4,
         textAlign: 'center',
     },
-    passwordInputWrapper: {
+    inputWrapper: {
         position: 'relative',
         flexDirection: 'row',
         alignItems: 'center',
     },
-    passwordInput: {
+    input: {
         flex: 1,
         borderWidth: 1,
         borderColor: '#ccc',
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     link: {
-        marginTop: 4,
+        marginTop: 10,
         color: '#2779F6',
         textDecorationLine: 'underline',
         fontSize: 16,
@@ -119,7 +119,7 @@ export default function LoginScreen() {
     // Navigate to lists after login
     useEffect(() => {
         if (user) {
-            router.replace('/shoppingLists');
+            router.replace('/shopping-lists');
         }
     }, [user, router]);
 
@@ -155,10 +155,6 @@ export default function LoginScreen() {
                 login(data.user, data.token);
                 setFormData(defaultForm);
                 setValidated(false);
-
-                setTimeout(() => {
-                    router.replace('/shoppingLists');
-                }, 1000);
             } else {
                 setLoginCall({ state: "error", error: data.message });
                 setMessage({ type: 'error', text: currentLanguage?.id === "EN" ? "Incorrect email or password." : "Nesprávný email nebo heslo." });
@@ -180,7 +176,7 @@ export default function LoginScreen() {
                 <View style={{ marginBottom: 24 }}>
                     <Text style={styles.formLabel}>Email:</Text>
                     <TextInput
-                        style={styles.passwordInput}
+                        style={styles.input}
                         value={formData.email}
                         onChangeText={(val) => setField("email", val)}
                         maxLength={60}
@@ -197,9 +193,9 @@ export default function LoginScreen() {
                     <Text style={styles.formLabel}>
                         {currentLanguage?.id === "EN" ? "Password" : "Heslo"}:
                     </Text>
-                    <View style={styles.passwordInputWrapper}>
+                    <View style={styles.inputWrapper}>
                         <TextInput
-                            style={styles.passwordInput}
+                            style={styles.input}
                             value={formData.password}
                             onChangeText={(val) => setField("password", val)}
                             maxLength={20}
@@ -242,8 +238,8 @@ export default function LoginScreen() {
                 </View>
 
                 <TouchableOpacity
-                    onPress={() => router.replace("/forgotPassword")}
-                    style={{ marginTop: 20, alignItems: 'center' }}
+                    onPress={() => router.replace("/forgot-password")}
+                    style={{ alignItems: 'center' }}
                 >
                     <Text style={styles.link}>
                         {currentLanguage?.id === "EN" ? "Forgot password?" : "Zapomněli jste heslo?"}

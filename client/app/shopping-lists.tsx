@@ -6,11 +6,12 @@ import { useUserContext } from "../context/UserContext";
 import { useShoppingListsContext } from "../context/ShoppingListsContext";
 import { useModeContext } from "../context/ModeContext";
 import { useLanguageContext } from "../context/LanguageContext";
-import AddListModal from "../components/AddListModal";
-import DeleteListModal from "../components/DeleteListModal";
-import AddItemModal from "../components/AddItemModal";
-import DeleteItemModal from "../components/DeleteItemModal";
-import ShoppingListChart from "../components/ShoppingListChart";
+import AddListModal from "../components/add-list-modal";
+import DeleteListModal from "../components/delete-list-modal";
+import AddItemModal from "../components/add-item-modal";
+import DeleteItemModal from "../components/delete-item-modal";
+import ShoppingListChart from "../components/shopping-list-chart";
+import { useRouter } from 'expo-router';
 
 const SERVER_URI = process.env.EXPO_PUBLIC_SERVER_URI;
 const USE_MOCKS = process.env.EXPO_PUBLIC_USE_MOCKS === "true";
@@ -32,7 +33,7 @@ interface ListData {
     items: ItemData[];
 }
 
-export default function ShoppingLists({ navigation }: any) {
+export default function ShoppingLists() {
     const { user, token, setUsers } = useUserContext();
     const {
         getAllLists,
@@ -48,6 +49,7 @@ export default function ShoppingLists({ navigation }: any) {
     } = useShoppingListsContext();
     const { mode } = useModeContext();
     const { currentLanguage } = useLanguageContext();
+    const router = useRouter();
 
     const [addListVisible, setAddListVisible] = useState(false);
     const [deleteListVisible, setDeleteListVisible] = useState(false);
@@ -76,14 +78,19 @@ export default function ShoppingLists({ navigation }: any) {
             const allData = await getAllLists();
             const userData = await getListsByUser(user.id);
 
-            if (allData) setAllListsCall({ state: "success", allData });
-            else setAllListsCall({ state: "error", error: "Failed to load all lists" });
+            if (allData) {
+                setAllListsCall({ state: "success", allData });
+                setAllLists(allData);
+            } else {
+                setAllListsCall({ state: "error", error: "Failed to load all lists" });
+            }
 
-            if (userData) setUserListsCall({ state: "success", userData });
-            else setUserListsCall({ state: "error", error: "Failed to load user lists" });
-
-            if (allData) setAllLists(allData);
-            if (userData) setUserLists(userData);
+            if (userData) {
+                setUserListsCall({ state: "success", userData });
+                setUserLists(userData);
+            } else {
+                setUserListsCall({ state: "error", error: "Failed to load user lists" });
+            }
         } catch (e: any) {
             setAllListsCall({ state: "error", error: e.message });
             setUserListsCall({ state: "error", error: e.message });
@@ -109,8 +116,11 @@ export default function ShoppingLists({ navigation }: any) {
         refreshLists();
     }, [showArchived]);
 
+    // Navigate to login after logout
     useEffect(() => {
-        if (!user) navigation.navigate("Login");
+        if (!user) {
+            router.replace('login')
+        }
     }, [user]);
 
     const isOwner = (list: ListData) => list.ownerId === user?.id;
@@ -205,7 +215,7 @@ export default function ShoppingLists({ navigation }: any) {
         refreshLists();
     };
 
-    const handleViewDetail = (listId: string) => navigation.navigate("Detail", { listId });
+    const handleViewDetail = (listId: string) => router.replace(`detail/${listId}`);
 
     const renderQuantity = (item: ItemData) => {
         if (!item.quantity) return "";
@@ -219,10 +229,14 @@ export default function ShoppingLists({ navigation }: any) {
     return (
         <ScrollView style={[styles.container, { backgroundColor: mode === "light" ? "#fff" : "#000" }]}>
             <View style={styles.header}>
-                <Text style={[styles.title, { color: mode === "light" ? "#000" : "#fff" }]}>{currentLanguage.id === "EN" ? "Shopping Lists" : "Nákupní seznamy"}</Text>
+                <Text style={[styles.title, { color: mode === "light" ? "#000" : "#fff" }]}>
+                    {currentLanguage.id === "EN" ? "Shopping Lists" : "Nákupní seznamy"}
+                </Text>
 
                 <View style={styles.switchRow}>
-                    <Text style={{ color: mode === "light" ? "#000" : "#fff" }}>{currentLanguage.id === "EN" ? "Show archived" : "Zobrazit uložené"}</Text>
+                    <Text style={{ color: mode === "light" ? "#000" : "#fff" }}>
+                        {currentLanguage.id === "EN" ? "Show archived" : "Zobrazit uložené"}
+                    </Text>
                     <Switch value={showArchived} onValueChange={() => setShowArchived(!showArchived)} />
                 </View>
 
@@ -235,21 +249,36 @@ export default function ShoppingLists({ navigation }: any) {
                 <ActivityIndicator size="large" color={mode === "light" ? "black" : "white"} style={{ marginTop: 50 }} />
             ) : (
                 <List.Section>
-                    <List.Accordion title={currentLanguage.id === "EN" ? "Lists" : "Seznamy"} expanded={listsAccordionOpen} onPress={() => setListsAccordionOpen(!listsAccordionOpen)}>
+                    <List.Accordion
+                        style={{ backgroundColor: mode === "light" ? "#555" : undefined }}
+                        title={currentLanguage.id === "EN" ? "Lists" : "Seznamy"}
+                        titleStyle={{ color: "white" }}
+                        expanded={listsAccordionOpen}
+                        onPress={() => setListsAccordionOpen(!listsAccordionOpen)}>
                         {userLists.length === 0 ? (
-                            <Text style={{ textAlign: "center", marginVertical: 20, color: "gray" }}>{currentLanguage.id === "EN" ? "No shopping lists found." : "Nejsou tu žádné seznamy."}</Text>
+                            <Text style={{ textAlign: "center", marginVertical: 20, color: "gray" }}>
+                                {currentLanguage.id === "EN" ? "No shopping lists found." : "Nejsou tu žádné seznamy."}
+                            </Text>
                         ) : (
                             userLists.map((list) => (
-                                <Card key={list._id} style={styles.card}>
-                                    <Card.Title title={list.title} right={() => <Button icon="plus" mode="contained" onPress={() => handleAddItemShow(list)}>{currentLanguage.id === "EN" ? "Item" : "Položka"}</Button>} />
+                                <Card key={list._id} style={{ marginVertical: 5 }}>
+                                    <Card.Title title={list.title} right={() =>
+                                        <Button icon="plus" mode="contained" onPress={() => handleAddItemShow(list)}>
+                                            {currentLanguage.id === "EN" ? "Item" : "Položka"}
+                                        </Button>} />
                                     <Card.Content>
                                         {list.items.length === 0 ? (
-                                            <Text style={{ textAlign: "center", color: "gray" }}>{currentLanguage.id === "EN" ? "No items" : "Žádné položky"}</Text>
+                                            <Text style={{ textAlign: "center", color: "gray" }}>
+                                                {currentLanguage.id === "EN" ? "No items" : "Žádné položky"}
+                                            </Text>
                                         ) : (
                                             list.items.map((item) => (
                                                 <View key={item._id} style={styles.itemRow}>
-                                                    <Checkbox status={item.resolved ? "checked" : "unchecked"} onPress={() => handleItemResolved(list._id, item._id)} />
-                                                    <Text style={{ textDecorationLine: item.resolved ? "line-through" : "none", flex: 1, color: mode === "light" ? "#000" : "#fff" }}>
+                                                    <Checkbox
+                                                        status={item.resolved ? "checked" : "unchecked"}
+                                                        onPress={() => handleItemResolved(list._id, item._id)}
+                                                    />
+                                                    <Text style={{ textDecorationLine: item.resolved ? "line-through" : "none", flex: 1, color: "#fff" }}>
                                                         {item.name} {renderQuantity(item)}
                                                     </Text>
                                                     <TouchableOpacity onPress={() => handleDeleteItemShow(list, item)}>
@@ -262,9 +291,12 @@ export default function ShoppingLists({ navigation }: any) {
                                     <Card.Actions>
                                         {isOwner(list) && (
                                             <>
-                                                <Button icon="delete" mode="contained" onPress={() => setDeleteListVisible(true)}>{currentLanguage.id === "EN" ? "Delete" : "Smazat"}</Button>
+                                                <Button icon="delete" mode="contained" onPress={() => setDeleteListVisible(true)}>
+                                                    {currentLanguage.id === "EN" ? "Delete" : "Smazat"}
+                                                </Button>
                                                 <Button icon={list.archived ? "archive-off" : "archive"} mode="contained" onPress={() => handleArchive(list._id)}>
-                                                    {list.archived ? (currentLanguage.id === "EN" ? "Unarchive" : "Obnovit") : (currentLanguage.id === "EN" ? "Archive" : "Uložit")}
+                                                    {list.archived ? (currentLanguage.id === "EN" ? "Unarchive" : "Obnovit") :
+                                                        (currentLanguage.id === "EN" ? "Archive" : "Uložit")}
                                                 </Button>
                                             </>
                                         )}
@@ -275,7 +307,12 @@ export default function ShoppingLists({ navigation }: any) {
                         )}
                     </List.Accordion>
 
-                    <List.Accordion title={currentLanguage.id === "EN" ? "Statistics" : "Statistiky"} expanded={statsAccordionOpen} onPress={() => setStatsAccordionOpen(!statsAccordionOpen)}>
+                    <List.Accordion
+                        style={{ backgroundColor: mode === "light" ? "#555" : undefined }}
+                        title={currentLanguage.id === "EN" ? "Statistics" : "Statistiky"}
+                        titleStyle={{ color: "white" }}
+                        expanded={statsAccordionOpen}
+                        onPress={() => setStatsAccordionOpen(!statsAccordionOpen)}>
                         <ShoppingListChart userLists={userLists} />
                     </List.Accordion>
                 </List.Section>
@@ -336,6 +373,5 @@ const styles = StyleSheet.create({
     header: { marginBottom: 20 },
     title: { fontSize: 24, fontWeight: "bold" },
     switchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginVertical: 10 },
-    card: { marginVertical: 5 },
-    itemRow: { flexDirection: "row", alignItems: "center", paddingVertical: 5 },
+    itemRow: { flexDirection: "row", alignItems: "center", paddingVertical: 5 }
 });

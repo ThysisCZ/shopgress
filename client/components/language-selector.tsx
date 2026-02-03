@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { View } from "react-native";
-import { Menu, Button } from "react-native-paper";
+import { View, StyleSheet } from "react-native";
+import { Dropdown } from 'react-native-element-dropdown';
 
 interface Language {
     id: string;
@@ -18,37 +18,37 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
     selectedLanguageId,
     setLanguage
 }) => {
-    const [visible, setVisible] = useState(false);
-
-    const openMenu = () => setVisible(true);
-    const closeMenu = () => setVisible(false);
-
+    const [isFocus, setIsFocus] = useState(false);
     const currentLanguage = languages.find(lang => lang.id === selectedLanguageId);
 
     return (
-        <View style={{ marginHorizontal: 10 }}>
-            <Menu
-                visible={visible}
-                onDismiss={closeMenu}
-                anchor={
-                    <Button mode="outlined" onPress={openMenu}>
-                        {currentLanguage?.name || "Select Language"}
-                    </Button>
-                }
-            >
-                {languages.map(lang => (
-                    <Menu.Item
-                        key={lang.id}
-                        title={lang.name}
-                        onPress={() => {
-                            setLanguage(lang.id);
-                            closeMenu();
-                        }}
-                    />
-                ))}
-            </Menu>
+        <View style={{ marginHorizontal: 10, width: 100 }}>
+            <Dropdown
+                style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
+                data={languages}
+                labelField="name"
+                valueField="name"
+                value={currentLanguage?.name}
+                onFocus={() => setIsFocus(true)}
+                onBlur={() => setIsFocus(false)}
+                onChange={lang => {
+                    setLanguage(lang.id);
+                    setIsFocus(false);
+                }}
+            />
         </View>
     );
 };
 
 export default LanguageSelector;
+
+const styles = StyleSheet.create({
+    dropdown: {
+        height: 50,
+        backgroundColor: 'white',
+        borderColor: 'gray',
+        borderWidth: 0.5,
+        borderRadius: 8,
+        paddingHorizontal: 8,
+    }
+});

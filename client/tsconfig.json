@@ -1,21 +1,21 @@
 {
-  "extends": "expo/tsconfig.base",
-  "compilerOptions": {
-    "strict": true,
-    "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "typeRoots": [
-        "./types"
-      ]
-    }
-  },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "components/language-selector.tsx",
-    "setBodyColor.js",
-    "app/shoppingLists.tsx"
-  ]
+    "extends": "expo/tsconfig.base",
+    "compilerOptions": {
+        "strict": true,
+        "paths": {
+            "@/*": [
+                "./*"
+            ],
+            "typeRoots": [
+                "./types"
+            ]
+        }
+    },
+    "include": [
+        "**/*.ts",
+        "**/*.tsx",
+        "components/language-selector.tsx",
+        "setBodyColor.js",
+        "app/shopping-lists.tsx"
+    ]
 }

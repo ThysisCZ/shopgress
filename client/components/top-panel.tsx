@@ -4,7 +4,6 @@ import { useUserContext } from '@/context/UserContext';
 import { useModeContext } from '@/context/ModeContext';
 import { useLanguageContext } from '@/context/LanguageContext';
 import LanguageSelector from '@/components/language-selector';
-import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Language {
@@ -14,19 +13,30 @@ interface Language {
 }
 
 const styles = StyleSheet.create({
-    topPanel: {
-        backgroundColor: '#f8f9fa',
+    topPanelLight: {
+        backgroundColor: "white",
         padding: 12,
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
         borderBottomWidth: 1,
         borderBottomColor: '#dee2e6',
+        height: 80
+    },
+    topPanelDark: {
+        backgroundColor: "#444",
+        padding: 12,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        borderBottomWidth: 1,
+        borderBottomColor: '#333',
+        height: 80
     },
     button: {
         backgroundColor: 'aqua',
         padding: 8,
         borderRadius: 4,
+        flexDirection: 'row',
+        gap: 3
     }
 });
 
@@ -34,7 +44,6 @@ export default function TopPanel() {
     const { user, logout, logoutCall } = useUserContext();
     const { mode, setMode } = useModeContext();
     const { languages, currentLanguage, setCurrentLanguage } = useLanguageContext();
-    const router = useRouter();
 
     const saveMode = async (mode: string) => {
         try {
@@ -72,46 +81,39 @@ export default function TopPanel() {
 
     const handleLogout = async () => {
         await logout();
-        router.replace('/login');
     }
 
     return (
-        <View style={styles.topPanel}>
-            <View>
+        <View style={mode === "light" ? styles.topPanelLight : styles.topPanelDark}>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
                 {user &&
                     <TouchableOpacity
                         disabled={logoutCall === "pending"}
                         onPress={handleLogout}
                         style={styles.button}
                     >
-                        <View style={{ flex: 1, flexDirection: "row", gap: 5 }}>
-                            <MaterialCommunityIcons name="logout" size={24} color="#333" />
-                            <Text style={{ marginTop: 2 }}>
-                                {logoutCall === "pending" ?
-                                    (currentLanguage.id === "EN" ? "Loading..." : "Odhlašování...") :
-                                    (currentLanguage.id === "EN" ? "Logout" : "Odhlásit se")
-                                }
-                            </Text>
-                        </View>
+                        <MaterialCommunityIcons name="logout" size={24} color="#333" />
+                        <Text style={{ marginTop: 2 }}>
+                            {logoutCall === "pending" ?
+                                (currentLanguage.id === "EN" ? "Loading..." : "Odhlašování...") :
+                                (currentLanguage.id === "EN" ? "Logout" : "Odhlásit se")
+                            }
+                        </Text>
                     </TouchableOpacity>
                 }
             </View>
-            <View style={{ flex: 1, flexDirection: "column", gap: 5, marginTop: 3, marginRight: 3 }}>
-                <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 5 }}>
-                    <Text style={{ marginBottom: 3 }}>{currentLanguage.id === "EN" ? "Language" : "Jazyk"}:</Text>
+            <View>
+                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
                     <LanguageSelector
                         languages={languages}
                         selectedLanguageId={currentLanguage.id}
                         setLanguage={handleLanguageChange}
                     />
-                </View>
-                <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 5 }}>
-                    <Text style={{ marginBottom: 3 }}>{currentLanguage.id === "EN" ? "Mode" : "Režim"}:</Text>
                     <TouchableOpacity
                         onPress={handleModeChange}
                         style={styles.button}
                     >
-                        <MaterialCommunityIcons name="theme-light-dark" size={24} color="#333" />
+                        <MaterialCommunityIcons name="theme-light-dark" size={24} color={mode === "light" ? "#333" : "white"} />
                     </TouchableOpacity>
                 </View>
             </View>
