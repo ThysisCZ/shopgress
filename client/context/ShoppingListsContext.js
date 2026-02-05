@@ -85,8 +85,7 @@ export function ShoppingListsProvider({ children }) {
                         list.memberIds.includes(userId)
                     );
 
-                    const dtoOut = showArchived ? result
-                        : result.filter(list => !list.archived);
+                    const dtoOut = result;
 
                     resolve(dtoOut);
                 }, 200);
@@ -102,8 +101,7 @@ export function ShoppingListsProvider({ children }) {
 
                 let result = await response.json();
                 result = result.data.filter(list => list.memberIds.includes(userId));
-                const dtoOut = showArchived ? result
-                    : result.filter(list => !list.archived);
+                const dtoOut = result;
 
                 return dtoOut;
             } catch (e) {

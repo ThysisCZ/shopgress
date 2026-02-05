@@ -6,25 +6,29 @@ interface AddListModalProps {
     onDismiss: () => void;
     onAdd: (name: string) => void;
     existingLists: string[];
+    language: string;
+    mode: string;
 }
 
 const AddListModal: React.FC<AddListModalProps> = ({
     visible,
     onDismiss,
     onAdd,
-    existingLists
+    existingLists,
+    language,
+    mode
 }) => {
     const [name, setName] = useState("");
     const [error, setError] = useState("");
 
     const validate = () => {
         if (!name.trim()) {
-            setError("Please enter a list name.");
+            setError(language === "EN" ? "This field is required." : "Toto pole je povinné.");
             return false;
         }
 
-        if (existingLists.includes(name.trim().toLowerCase())) {
-            setError("A list with this name already exists.");
+        if (existingLists.some(list => list.trim().toLowerCase() === name.trim().toLowerCase())) {
+            setError(language === "EN" ? "This list already exists." : "Tento seznam již existuje.");
             return false;
         }
 
@@ -42,12 +46,12 @@ const AddListModal: React.FC<AddListModalProps> = ({
 
     return (
         <Portal>
-            <Dialog visible={visible} onDismiss={onDismiss}>
-                <Dialog.Title>Create a new list</Dialog.Title>
+            <Dialog visible={visible} onDismiss={onDismiss} style={{ backgroundColor: mode === "light" ? "#555" : "#1c191f" }}>
+                <Dialog.Title>{language === "EN" ? "Add a new list" : "Přidat nový seznam"}</Dialog.Title>
 
                 <Dialog.Content>
                     <TextInput
-                        label="List name"
+                        label={language === "EN" ? "List title" : "Název"}
                         mode="outlined"
                         value={name}
                         onChangeText={setName}
@@ -57,12 +61,13 @@ const AddListModal: React.FC<AddListModalProps> = ({
                     {error ? <HelperText type="error">{error}</HelperText> : null}
                 </Dialog.Content>
 
-                <Divider />
+                <Divider style={{ marginBottom: 25 }} />
 
                 <Dialog.Actions>
-                    <Button onPress={onDismiss}>Cancel</Button>
-                    <Button mode="contained" onPress={handleAdd}>
-                        Create
+                    <Button onPress={onDismiss} textColor="white">{language === "EN" ? "Cancel" : "Zrušit"}</Button>
+                    <Button mode="contained" onPress={handleAdd} buttonColor="lightgreen" textColor="darkgreen"
+                        style={{ width: 80 }}>
+                        {language === "EN" ? "Add" : "Přidat"}
                     </Button>
                 </Dialog.Actions>
             </Dialog>

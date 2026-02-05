@@ -14,22 +14,22 @@ interface Language {
 
 const styles = StyleSheet.create({
     topPanelLight: {
-        backgroundColor: "white",
+        backgroundColor: "#dddddd",
         padding: 12,
         flexDirection: 'row',
         justifyContent: 'space-between',
         borderBottomWidth: 1,
-        borderBottomColor: '#dee2e6',
-        height: 80
+        borderBottomColor: '#dddddd',
+        height: 90
     },
     topPanelDark: {
-        backgroundColor: "#444",
+        backgroundColor: "#333",
         padding: 12,
         flexDirection: 'row',
         justifyContent: 'space-between',
         borderBottomWidth: 1,
         borderBottomColor: '#333',
-        height: 80
+        height: 90
     },
     button: {
         backgroundColor: 'aqua',
@@ -85,7 +85,7 @@ export default function TopPanel() {
 
     return (
         <View style={mode === "light" ? styles.topPanelLight : styles.topPanelDark}>
-            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
                 {user &&
                     <TouchableOpacity
                         disabled={logoutCall === "pending"}
@@ -103,7 +103,7 @@ export default function TopPanel() {
                 }
             </View>
             <View>
-                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
                     <LanguageSelector
                         languages={languages}
                         selectedLanguageId={currentLanguage.id}

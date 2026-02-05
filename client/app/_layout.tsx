@@ -26,7 +26,7 @@ function RootLayoutContent() {
     }, [user, router]);
 
     return (
-        <View style={{ flex: 1, marginTop: 25 }}>
+        <View style={{ flex: 1 }}>
             <TopPanel />
             <View style={{ flex: 1 }}>
                 <Stack>

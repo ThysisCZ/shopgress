@@ -1,12 +1,13 @@
 import React from "react";
-import { Portal, Dialog, Button, Text } from "react-native-paper";
+import { Portal, Dialog, Button, Text, Divider } from "react-native-paper";
 
 interface DeleteListModalProps {
     visible: boolean;
     onDismiss: () => void;
     onDelete: () => void;
     listTitle?: string;
-    language: "EN" | "CZ";
+    language: string;
+    mode: string;
 }
 
 const DeleteListModal: React.FC<DeleteListModalProps> = ({
@@ -14,7 +15,8 @@ const DeleteListModal: React.FC<DeleteListModalProps> = ({
     onDismiss,
     onDelete,
     listTitle,
-    language
+    language,
+    mode
 }) => {
     const handleDelete = () => {
         onDelete();
@@ -23,9 +25,9 @@ const DeleteListModal: React.FC<DeleteListModalProps> = ({
 
     return (
         <Portal>
-            <Dialog visible={visible} onDismiss={onDismiss}>
+            <Dialog visible={visible} onDismiss={onDismiss} style={{ backgroundColor: mode === "light" ? "#555" : "#1c191f" }}>
                 <Dialog.Title>
-                    {language === "EN" ? "Delete List" : "Smazat seznam"} {listTitle ? `(${listTitle})?` : "?"}
+                    {language === "EN" ? "Delete List" : "Smazat seznam"} {`(${listTitle})?`}
                 </Dialog.Title>
 
                 <Dialog.Content>
@@ -36,9 +38,12 @@ const DeleteListModal: React.FC<DeleteListModalProps> = ({
                     </Text>
                 </Dialog.Content>
 
+                <Divider style={{ marginBottom: 25 }} />
+
                 <Dialog.Actions>
-                    <Button onPress={onDismiss}>{language === "EN" ? "Cancel" : "Zrušit"}</Button>
-                    <Button mode="contained" onPress={handleDelete} buttonColor="#d9534f">
+                    <Button onPress={onDismiss} textColor="#ffffff">{language === "EN" ? "Cancel" : "Zrušit"}</Button>
+                    <Button mode="contained" onPress={handleDelete} buttonColor="#d9534f" textColor="#ffffff"
+                        style={{ width: 80 }}>
                         {language === "EN" ? "Delete" : "Smazat"}
                     </Button>
                 </Dialog.Actions>

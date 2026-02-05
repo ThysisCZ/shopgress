@@ -17,7 +17,7 @@ const SERVER_URI = process.env.EXPO_PUBLIC_SERVER_URI;
 const USE_MOCKS = process.env.EXPO_PUBLIC_USE_MOCKS === "true";
 
 interface ItemData {
-    _id: string;
+    _id?: string | undefined;
     name: string;
     quantity: number;
     unit: string | null;
@@ -25,7 +25,7 @@ interface ItemData {
 }
 
 interface ListData {
-    _id: string;
+    _id?: string | undefined;
     title: string;
     ownerId: string;
     memberIds: string[];
@@ -69,35 +69,43 @@ export default function ShoppingLists() {
     const [statsAccordionOpen, setStatsAccordionOpen] = useState(false);
 
     const items = selectedList?.items || [];
+    const filteredLists = showArchived ? userLists : userLists.filter(list => !list.archived);
 
-    const refreshLists = async () => {
+    const loadAllLists = async () => {
         setAllListsCall({ state: "pending" });
-        setUserListsCall({ state: "pending" });
 
         try {
             const allData = await getAllLists();
-            const userData = await getListsByUser(user.id);
 
             if (allData) {
                 setAllListsCall({ state: "success", allData });
                 setAllLists(allData);
             } else {
-                setAllListsCall({ state: "error", error: "Failed to load all lists" });
+                setAllListsCall({ state: "error", error: "Failed to load all lists." });
             }
+        } catch (e: any) {
+            setAllListsCall({ state: "error", error: e.message });
+        }
+    }
+
+    const loadUserLists = async () => {
+        setUserListsCall({ state: "pending" });
+
+        try {
+            const userData = await getListsByUser(user.id);
 
             if (userData) {
                 setUserListsCall({ state: "success", userData });
                 setUserLists(userData);
             } else {
-                setUserListsCall({ state: "error", error: "Failed to load user lists" });
+                setUserListsCall({ state: "error", error: "Failed to load user lists." });
             }
         } catch (e: any) {
-            setAllListsCall({ state: "error", error: e.message });
             setUserListsCall({ state: "error", error: e.message });
         }
-    };
+    }
 
-    const getAllUsers = async () => {
+    const loadAllUsers = async () => {
         try {
             const res = await fetch(`${SERVER_URI}/user/list`, { headers: { Authorization: `Bearer ${token}` } });
             const result = await res.json();
@@ -108,12 +116,14 @@ export default function ShoppingLists() {
     };
 
     useEffect(() => {
-        getAllUsers();
-        refreshLists();
+        loadAllUsers();
+        loadAllLists();
+        loadUserLists();
     }, []);
 
+    // Show or hide archived lists
     useEffect(() => {
-        refreshLists();
+        loadUserLists();
     }, [showArchived]);
 
     // Navigate to login after logout
@@ -124,6 +134,11 @@ export default function ShoppingLists() {
     }, [user]);
 
     const isOwner = (list: ListData) => list.ownerId === user?.id;
+
+    const handleDeleteListShow = (list: ListData) => {
+        setSelectedList(list);
+        setDeleteListVisible(true);
+    }
 
     const handleAddItemShow = (list: ListData) => {
         setSelectedList(list);
@@ -137,66 +152,165 @@ export default function ShoppingLists() {
     };
 
     const handleItemAdded = async (item: ItemData) => {
-        if (!selectedList) return;
-        const updatedItems = [...items, item];
+        const updatedItems = [...selectedList?.items as ItemData[], item];
+        const updatedList = { ...selectedList as ListData, items: updatedItems };
 
-        if (USE_MOCKS) await updateList({ ...selectedList, items: updatedItems });
-        else
-            await fetch(`${SERVER_URI}/shoppingList/update/${selectedList._id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ items: updatedItems }),
-            });
+        if (USE_MOCKS) {
+            await updateList(updatedList);
+            await loadUserLists();
+        } else {
+            const dtoIn = {
+                items: updatedItems
+            }
 
-        refreshLists();
-    };
+            try {
+                const response = await fetch(`${SERVER_URI}/shoppingList/update/${selectedList?._id}`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify(dtoIn)
+                });
 
+                setSelectedList(updatedList);
+
+                await loadUserLists();
+
+                const dtoOut = await response.json();
+                return dtoOut;
+            } catch (e: any) {
+                console.error("Error: ", e.message);
+            }
+        }
+    }
+
+    // Handle item resolved status toggle
     const handleItemResolved = async (listId: string, itemId: string) => {
-        const list = (await getListById(listId)) as ListData;
-        const updatedItems = list.items.map((item) => (item._id === itemId ? { ...item, resolved: !item.resolved } : item));
+        const list = await getListById(listId) as ListData;
 
-        if (USE_MOCKS) await updateList({ ...list, items: updatedItems });
-        else await fetch(`${SERVER_URI}/shoppingList/update/${listId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ items: updatedItems }),
-        });
+        // Find the item and update resolved state
+        let updatedItem = list.items.find(item => item._id === itemId);
 
-        refreshLists();
+        const updatedItems = list.items.map(item =>
+            item._id === itemId ? { ...updatedItem, resolved: !updatedItem?.resolved } : item
+        );
+
+        const updatedList = { ...list, items: updatedItems };
+
+        if (USE_MOCKS) {
+            // Call mock data
+            await updateList(updatedList);
+        } else {
+            // Call the server
+            try {
+                const dtoIn = {
+                    items: updatedItems
+                }
+
+                const response = await fetch(`${SERVER_URI}/shoppingList/update/${listId}`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify(dtoIn)
+                });
+
+                // Refresh without loading
+                const refreshed = await getListsByUser(user.id);
+                setUserLists(refreshed);
+
+                const dtoOut = await response.json();
+                return dtoOut;
+            } catch (e: any) {
+                console.error("Error:", e.message);
+            }
+        }
     };
 
+    // Handle item deletion
     const handleItemDelete = async (item: ItemData) => {
-        if (!selectedList) return;
-        const updatedItems = selectedList.items.filter((i) => i._id !== item._id);
+        const updatedItems = items?.filter(i => i._id !== item._id);
 
-        if (USE_MOCKS) await updateList({ ...selectedList, items: updatedItems });
-        else await fetch(`${SERVER_URI}/shoppingList/update/${selectedList._id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ items: updatedItems }),
-        });
+        if (USE_MOCKS) {
+            await updateList({ ...selectedList, items: updatedItems });
+        } else {
+            const dtoIn = {
+                items: updatedItems
+            }
 
-        refreshLists();
+            try {
+                const response = await fetch(`${SERVER_URI}/shoppingList/update/${selectedList?._id}`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify(dtoIn)
+                });
+
+                const refreshed = await getListsByUser(user.id);
+                setUserLists(refreshed);
+
+                const dtoOut = await response.json();
+                return dtoOut;
+            } catch (e: any) {
+                console.error("Error: ", e.message);
+            }
+        }
     };
 
     const handleListAdd = async (newList: ListData) => {
-        if (USE_MOCKS) await addList(newList);
-        else await fetch(`${SERVER_URI}/shoppingList/create`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-            body: JSON.stringify(newList),
-        });
-        refreshLists();
+        if (USE_MOCKS) {
+            await addList(newList);
+            await loadUserLists();
+        } else {
+            try {
+                const response = await fetch(`${SERVER_URI}/shoppingList/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(newList)
+                });
+
+                await loadUserLists();
+
+                const result = await response.json();
+                const dtoOut = result.data;
+
+                return dtoOut;
+            } catch (e: any) {
+                console.error("Error: ", e.message);
+            }
+        }
     };
 
     const handleListDelete = async (listId: string) => {
-        setDeleteListVisible(false);
         setSelectedList(null);
 
-        if (USE_MOCKS) await deleteList(listId);
-        else await fetch(`${SERVER_URI}/shoppingList/delete/${listId}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+        if (USE_MOCKS) {
+            await deleteList(listId);
+            await loadUserLists();
+        } else {
+            try {
+                const response = await fetch(`${SERVER_URI}/shoppingList/delete/${listId}`, {
+                    method: "DELETE",
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
 
-        refreshLists();
+                await loadUserLists();
+
+                const dtoOut = await response.json();
+                return dtoOut;
+            } catch (e: any) {
+                console.error("Error: " + e.message);
+            }
+        }
     };
 
     const handleArchive = async (listId: string) => {
@@ -204,24 +318,40 @@ export default function ShoppingLists() {
 
         if (USE_MOCKS) {
             list.archived ? await unarchiveList(listId) : await archiveList(listId);
+            await loadUserLists();
         } else {
-            await fetch(`${SERVER_URI}/shoppingList/update/${listId}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ archived: !list.archived }),
-            });
-        }
+            const dtoIn = {
+                archived: !list.archived
+            }
 
-        refreshLists();
+            try {
+                const response = await fetch(`${SERVER_URI}/shoppingList/update/${listId}`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(dtoIn)
+                });
+
+                await loadUserLists();
+
+                const result = await response.json();
+                const dtoOut = result.data;
+
+                return dtoOut;
+            } catch (e: any) {
+                console.error("Error: ", e.message);
+            }
+        }
     };
 
     const handleViewDetail = (listId: string) => router.replace(`detail/${listId}`);
 
     const renderQuantity = (item: ItemData) => {
-        if (!item.quantity) return "";
         if (currentLanguage.id === "EN") return `${item.quantity} ${item.unit || ""}`;
 
-        const unitMap: Record<string, string> = { tsp: "ČL", tbsp: "PL", pc: "ks", c: "hrn." };
+        const unitMap: Record<string, string> = { tsp: "ČL", tbsp: "PL", pc: "ks", c: "hrn" };
         const translatedUnit = item.unit ? unitMap[item.unit] || item.unit : "";
         return `${item.quantity} ${translatedUnit}`;
     };
@@ -233,16 +363,19 @@ export default function ShoppingLists() {
                     {currentLanguage.id === "EN" ? "Shopping Lists" : "Nákupní seznamy"}
                 </Text>
 
-                <View style={styles.switchRow}>
-                    <Text style={{ color: mode === "light" ? "#000" : "#fff" }}>
-                        {currentLanguage.id === "EN" ? "Show archived" : "Zobrazit uložené"}
-                    </Text>
-                    <Switch value={showArchived} onValueChange={() => setShowArchived(!showArchived)} />
-                </View>
+                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={styles.switchRow}>
+                        <Text style={{ color: mode === "light" ? "#000" : "#fff" }}>
+                            {currentLanguage.id === "EN" ? "Show archived" : "Zobrazit uložené"}
+                        </Text>
+                        <Switch value={showArchived} onValueChange={() => setShowArchived(!showArchived)} />
+                    </View>
 
-                <Button mode="contained" icon="plus" onPress={() => setAddListVisible(true)} style={{ marginTop: 10 }}>
-                    {currentLanguage.id === "EN" ? "Add list" : "Přidat seznam"}
-                </Button>
+                    <Button mode="contained" icon="plus" onPress={() => setAddListVisible(true)}
+                        buttonColor="lightgreen" textColor="darkgreen">
+                        {currentLanguage.id === "EN" ? "List" : "Seznam"}
+                    </Button>
+                </View>
             </View>
 
             {(allListsCall.state === "pending" || userListsCall.state === "pending") ? (
@@ -250,35 +383,46 @@ export default function ShoppingLists() {
             ) : (
                 <List.Section>
                     <List.Accordion
-                        style={{ backgroundColor: mode === "light" ? "#555" : undefined }}
+                        style={{
+                            backgroundColor: mode === "light" ? "#dddddd" : "#1c191f",
+                            borderRadius: 12, marginBottom: 10
+                        }}
+                        theme={{ colors: { background: mode === "light" ? "white" : "black" } }}
                         title={currentLanguage.id === "EN" ? "Lists" : "Seznamy"}
-                        titleStyle={{ color: "white" }}
+                        titleStyle={{ color: mode === "light" ? "black" : "white" }}
                         expanded={listsAccordionOpen}
                         onPress={() => setListsAccordionOpen(!listsAccordionOpen)}>
-                        {userLists.length === 0 ? (
+                        {filteredLists.length === 0 ? (
                             <Text style={{ textAlign: "center", marginVertical: 20, color: "gray" }}>
                                 {currentLanguage.id === "EN" ? "No shopping lists found." : "Nejsou tu žádné seznamy."}
                             </Text>
                         ) : (
-                            userLists.map((list) => (
-                                <Card key={list._id} style={{ marginVertical: 5 }}>
-                                    <Card.Title title={list.title} right={() =>
-                                        <Button icon="plus" mode="contained" onPress={() => handleAddItemShow(list)}>
-                                            {currentLanguage.id === "EN" ? "Item" : "Položka"}
-                                        </Button>} />
-                                    <Card.Content>
+                            filteredLists.map((list) => (
+                                <Card key={list._id} style={{ marginBottom: 10, backgroundColor: mode === "light" ? "#f3f3f3" : "#272727" }}>
+                                    <Card.Title title={list.title} titleStyle={{ color: mode === "light" ? "black" : "white" }}
+                                        right={() =>
+                                            <Button icon="plus" mode="contained" onPress={() => handleAddItemShow(list)}
+                                                buttonColor="lightgreen" textColor="darkgreen" style={{ marginRight: 13 }}>
+                                                {currentLanguage.id === "EN" ? "Item" : "Položka"}
+                                            </Button>} />
+                                    <Card.Content style={{ marginRight: 5 }}>
                                         {list.items.length === 0 ? (
-                                            <Text style={{ textAlign: "center", color: "gray" }}>
+                                            <Text style={{ textAlign: "center", color: "gray", marginBottom: 15 }}>
                                                 {currentLanguage.id === "EN" ? "No items" : "Žádné položky"}
                                             </Text>
                                         ) : (
-                                            list.items.map((item) => (
+                                            list.items.map((item: any) => (
                                                 <View key={item._id} style={styles.itemRow}>
                                                     <Checkbox
                                                         status={item.resolved ? "checked" : "unchecked"}
-                                                        onPress={() => handleItemResolved(list._id, item._id)}
+                                                        onPress={() => handleItemResolved(list._id as string, item._id)}
+                                                        color={mode === "light" ? "green" : "lightgreen"}
+                                                        uncheckedColor={mode === "light" ? "black" : "white"}
                                                     />
-                                                    <Text style={{ textDecorationLine: item.resolved ? "line-through" : "none", flex: 1, color: "#fff" }}>
+                                                    <Text style={{
+                                                        textDecorationLine: item.resolved ? "line-through" : "none", flex: 1,
+                                                        color: mode === "light" ? "black" : "white"
+                                                    }}>
                                                         {item.name} {renderQuantity(item)}
                                                     </Text>
                                                     <TouchableOpacity onPress={() => handleDeleteItemShow(list, item)}>
@@ -289,18 +433,24 @@ export default function ShoppingLists() {
                                         )}
                                     </Card.Content>
                                     <Card.Actions>
-                                        {isOwner(list) && (
-                                            <>
-                                                <Button icon="delete" mode="contained" onPress={() => setDeleteListVisible(true)}>
-                                                    {currentLanguage.id === "EN" ? "Delete" : "Smazat"}
-                                                </Button>
-                                                <Button icon={list.archived ? "archive-off" : "archive"} mode="contained" onPress={() => handleArchive(list._id)}>
-                                                    {list.archived ? (currentLanguage.id === "EN" ? "Unarchive" : "Obnovit") :
-                                                        (currentLanguage.id === "EN" ? "Archive" : "Uložit")}
-                                                </Button>
-                                            </>
-                                        )}
-                                        <Button mode="contained" onPress={() => handleViewDetail(list._id)}>Detail</Button>
+                                        <View style={{ flex: 1, flexDirection: "row", justifyContent: "center", gap: 8, marginRight: 5 }}>
+                                            {isOwner(list) && (
+                                                <>
+                                                    <Button icon="delete" mode="contained" onPress={() => handleDeleteListShow(list)}
+                                                        buttonColor="pink" textColor="darkred">
+                                                        {currentLanguage.id === "EN" ? "Delete" : "Smazat"}
+                                                    </Button>
+                                                    <Button icon={list.archived ? "archive-off" : "archive"} mode="contained" onPress={() => handleArchive(list._id as string)}
+                                                        buttonColor={list.archived ? "lightgray" : "bisque"}
+                                                        textColor={list.archived ? "dimgray" : "darkorange"}>
+                                                        {list.archived ? (currentLanguage.id === "EN" ? "Unarchive" : "Obnovit") :
+                                                            (currentLanguage.id === "EN" ? "Archive" : "Uložit")}
+                                                    </Button>
+                                                </>
+                                            )}
+                                            <Button mode="contained" icon="eye" onPress={() => handleViewDetail(list._id as string)}
+                                                buttonColor="lightblue" textColor="darkblue">Detail</Button>
+                                        </View>
                                     </Card.Actions>
                                 </Card>
                             ))
@@ -308,23 +458,24 @@ export default function ShoppingLists() {
                     </List.Accordion>
 
                     <List.Accordion
-                        style={{ backgroundColor: mode === "light" ? "#555" : undefined }}
+                        style={{
+                            backgroundColor: mode === "light" ? "#dddddd" : "#1c191f",
+                            borderRadius: 12
+                        }}
+                        theme={{ colors: { background: mode === "light" ? "white" : "black" } }}
                         title={currentLanguage.id === "EN" ? "Statistics" : "Statistiky"}
-                        titleStyle={{ color: "white" }}
+                        titleStyle={{ color: mode === "light" ? "black" : "white" }}
                         expanded={statsAccordionOpen}
                         onPress={() => setStatsAccordionOpen(!statsAccordionOpen)}>
-                        <ShoppingListChart userLists={userLists} />
+                        <ShoppingListChart userLists={userLists as any[]} />
                     </List.Accordion>
                 </List.Section>
             )}
-
-            <Divider style={{ marginVertical: 20 }} />
 
             <AddListModal
                 visible={addListVisible}
                 onDismiss={() => setAddListVisible(false)}
                 onAdd={(name: string) => handleListAdd({
-                    _id: "",
                     title: name,
                     ownerId: user.id,
                     memberIds: [user.id],
@@ -332,14 +483,17 @@ export default function ShoppingLists() {
                     items: []
                 })}
                 existingLists={allLists.map(list => list.title)}
+                language={currentLanguage.id}
+                mode={mode}
             />
 
             <DeleteListModal
                 visible={deleteListVisible}
                 onDismiss={() => setDeleteListVisible(false)}
-                onDelete={() => selectedList && handleListDelete(selectedList._id)}
+                onDelete={() => selectedList && handleListDelete(selectedList._id as string)}
                 listTitle={selectedList?.title}
                 language={currentLanguage.id}
+                mode={mode}
             />
 
             <AddItemModal
@@ -347,7 +501,6 @@ export default function ShoppingLists() {
                 onDismiss={() => setAddItemVisible(false)}
                 onAdd={(item: ItemData) => {
                     handleItemAdded({
-                        _id: "",
                         name: item.name,
                         quantity: item.quantity,
                         unit: item.unit || null,
@@ -355,6 +508,8 @@ export default function ShoppingLists() {
                     });
                 }}
                 existingItems={items.map(item => item.name)}
+                language={currentLanguage.id}
+                mode={mode}
             />
 
             <DeleteItemModal
@@ -363,6 +518,7 @@ export default function ShoppingLists() {
                 onDelete={() => selectedItem && handleItemDelete(selectedItem)}
                 itemName={selectedItem?.name}
                 language={currentLanguage.id}
+                mode={mode}
             />
         </ScrollView>
     );
