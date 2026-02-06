@@ -31,10 +31,10 @@ function RootLayoutContent() {
             <View style={{ flex: 1 }}>
                 <Stack>
                     <Stack.Screen name="index" options={{ headerShown: false }} />
-                    <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
                     <Stack.Screen name="login" options={{ headerShown: false }} />
                     <Stack.Screen name="register" options={{ headerShown: false }} />
                     <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
+                    <Stack.Screen name="reset-password" options={{ headerShown: false }} />
                     <Stack.Screen name="shopping-lists" options={{ headerShown: false }} />
                 </Stack>
             </View>

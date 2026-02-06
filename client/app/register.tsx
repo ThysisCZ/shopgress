@@ -3,6 +3,7 @@ import { StyleSheet, View, ScrollView, Text, TextInput, TouchableOpacity, Dimens
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useUserContext } from '../context/UserContext';
 import { useLanguageContext } from '../context/LanguageContext';
+import { useModeContext } from '@/context/ModeContext';
 import { useRouter } from 'expo-router';
 
 interface UserData {
@@ -18,82 +19,6 @@ interface UserData {
 
 const { width } = Dimensions.get('window');
 const mobileSize = width < 568;
-
-const styles = StyleSheet.create({
-    loginContainer: {
-        width: mobileSize ? 300 : 500,
-        marginTop: 60,
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        padding: 30,
-        borderWidth: 1,
-        borderColor: '#d8d8d8',
-        backgroundColor: 'white',
-        borderRadius: 8,
-    },
-    loginHeader: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginBottom: 20,
-        color: '#2e2e2e',
-    },
-    formLabel: {
-        marginBottom: 8,
-        color: '#2e2e2e',
-        fontWeight: '500',
-    },
-    authButton: {
-        marginTop: 25,
-        alignItems: 'center',
-    },
-    successMessage: {
-        padding: 12,
-        marginTop: 20,
-        backgroundColor: '#d4edda',
-        color: '#155724',
-        borderWidth: 1,
-        borderColor: '#c3e6cb',
-        borderRadius: 4,
-        textAlign: 'center',
-    },
-    errorMessage: {
-        padding: 12,
-        marginTop: 20,
-        backgroundColor: '#f8d7da',
-        color: '#721c24',
-        borderWidth: 1,
-        borderColor: '#f5c6cb',
-        borderRadius: 4,
-        textAlign: 'center',
-    },
-    inputWrapper: {
-        position: 'relative',
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    input: {
-        flex: 1,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 4,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        fontSize: 16,
-        paddingRight: 50,
-    },
-    togglePasswordBtn: {
-        position: 'absolute',
-        right: 10,
-        padding: 5,
-    },
-    loginText: {
-        fontSize: 16
-    },
-    messageText: {
-        textAlign: 'center',
-    },
-});
 
 export default function SignUpScreen() {
     const defaultForm = {
@@ -111,6 +36,7 @@ export default function SignUpScreen() {
     const [showPassword, setShowPassword] = useState(false);
     const { login, user } = useUserContext();
     const { currentLanguage } = useLanguageContext();
+    const { mode } = useModeContext();
     const router = useRouter();
 
     // Navigate to lists after registering
@@ -167,7 +93,7 @@ export default function SignUpScreen() {
     }
 
     return (
-        <ScrollView style={{ flex: 1 }}>
+        <ScrollView style={{ flex: 1, backgroundColor: mode === "light" ? "#fff" : "#000" }}>
             <View style={styles.loginContainer}>
                 <Text style={styles.loginHeader}>
                     {currentLanguage?.id === "EN" ? "Sign Up" : "Registrace"}
@@ -286,3 +212,79 @@ export default function SignUpScreen() {
         </ScrollView>
     );
 }
+
+const styles = StyleSheet.create({
+    loginContainer: {
+        width: mobileSize ? 300 : 500,
+        marginTop: 60,
+        marginLeft: 'auto',
+        marginRight: 'auto',
+        padding: 30,
+        borderWidth: 1,
+        borderColor: '#d8d8d8',
+        backgroundColor: 'white',
+        borderRadius: 8,
+    },
+    loginHeader: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginBottom: 20,
+        color: '#2e2e2e',
+    },
+    formLabel: {
+        marginBottom: 8,
+        color: '#2e2e2e',
+        fontWeight: '500',
+    },
+    authButton: {
+        marginTop: 25,
+        alignItems: 'center',
+    },
+    successMessage: {
+        padding: 12,
+        marginTop: 20,
+        backgroundColor: '#d4edda',
+        color: '#155724',
+        borderWidth: 1,
+        borderColor: '#c3e6cb',
+        borderRadius: 4,
+        textAlign: 'center',
+    },
+    errorMessage: {
+        padding: 12,
+        marginTop: 20,
+        backgroundColor: '#f8d7da',
+        color: '#721c24',
+        borderWidth: 1,
+        borderColor: '#f5c6cb',
+        borderRadius: 4,
+        textAlign: 'center',
+    },
+    inputWrapper: {
+        position: 'relative',
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    input: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 4,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        fontSize: 16,
+        paddingRight: 50,
+    },
+    togglePasswordBtn: {
+        position: 'absolute',
+        right: 10,
+        padding: 5,
+    },
+    loginText: {
+        fontSize: 16
+    },
+    messageText: {
+        textAlign: 'center',
+    },
+});
