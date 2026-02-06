@@ -1,4 +1,3 @@
-import React from "react";
 import { View, Text, Dimensions } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { useLanguageContext } from "../context/LanguageContext";
@@ -22,7 +21,7 @@ interface ShoppingListChartProps {
     userLists: ListData[];
 }
 
-const ShoppingListChart: React.FC<ShoppingListChartProps> = ({ userLists }) => {
+export default function ShoppingListChart({ userLists }: ShoppingListChartProps) {
     const { currentLanguage } = useLanguageContext();
     const { mode } = useModeContext();
 
@@ -77,5 +76,3 @@ const ShoppingListChart: React.FC<ShoppingListChartProps> = ({ userLists }) => {
         </View>
     );
 };
-
-export default ShoppingListChart;

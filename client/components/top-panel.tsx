@@ -12,34 +12,6 @@ interface Language {
     name: string;
 }
 
-const styles = StyleSheet.create({
-    topPanelLight: {
-        backgroundColor: "#dddddd",
-        padding: 12,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        borderBottomWidth: 1,
-        borderBottomColor: '#dddddd',
-        height: 90
-    },
-    topPanelDark: {
-        backgroundColor: "#333",
-        padding: 12,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        borderBottomWidth: 1,
-        borderBottomColor: '#333',
-        height: 90
-    },
-    button: {
-        backgroundColor: 'aqua',
-        padding: 8,
-        borderRadius: 4,
-        flexDirection: 'row',
-        gap: 3
-    }
-});
-
 export default function TopPanel() {
     const { user, logout, logoutCall } = useUserContext();
     const { mode, setMode } = useModeContext();
@@ -120,3 +92,31 @@ export default function TopPanel() {
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    topPanelLight: {
+        backgroundColor: "#dddddd",
+        padding: 12,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        borderBottomWidth: 1,
+        borderBottomColor: '#dddddd',
+        height: 90
+    },
+    topPanelDark: {
+        backgroundColor: "#333",
+        padding: 12,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        borderBottomWidth: 1,
+        borderBottomColor: '#333',
+        height: 90
+    },
+    button: {
+        backgroundColor: 'aqua',
+        padding: 8,
+        borderRadius: 4,
+        flexDirection: 'row',
+        gap: 3
+    }
+});

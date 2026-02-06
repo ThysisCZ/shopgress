@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { View } from "react-native";
 import {
     Portal,
@@ -27,14 +27,14 @@ interface AddItemModalProps {
     mode: string;
 }
 
-const AddItemModal: React.FC<AddItemModalProps> = ({
+export default function AddItemModal({
     visible,
     onDismiss,
     onAdd,
     existingItems,
     language,
     mode
-}) => {
+}: AddItemModalProps) {
     const [name, setName] = useState("");
     const [amount, setAmount] = useState("");
     const [unit, setUnit] = useState("");
@@ -53,7 +53,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
     };
 
     const UNITS = [
-        { id: "0", name: "", translation: "---" },
+        { id: "0", name: "", translation: language === "EN" ? "No unit" : "Bez jednotky" },
         { id: "1", name: "ml", translation: "ml" },
         { id: "2", name: "dl", translation: "dl" },
         { id: "3", name: "l", translation: "l" },
@@ -168,5 +168,3 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
         </Portal>
     );
 };
-
-export default AddItemModal;

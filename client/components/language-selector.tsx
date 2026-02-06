@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { Dropdown } from 'react-native-element-dropdown';
 
@@ -13,11 +13,11 @@ interface LanguageSelectorProps {
     setLanguage: (id: string) => void;
 }
 
-const LanguageSelector: React.FC<LanguageSelectorProps> = ({
+export default function LanguageSelector({
     languages,
     selectedLanguageId,
     setLanguage
-}) => {
+}: LanguageSelectorProps) {
     const [isFocus, setIsFocus] = useState(false);
     const currentLanguage = languages.find(lang => lang.id === selectedLanguageId);
 
@@ -39,8 +39,6 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         </View>
     );
 };
-
-export default LanguageSelector;
 
 const styles = StyleSheet.create({
     dropdown: {

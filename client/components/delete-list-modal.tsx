@@ -1,4 +1,3 @@
-import React from "react";
 import { Portal, Dialog, Button, Text, Divider } from "react-native-paper";
 
 interface DeleteListModalProps {
@@ -10,14 +9,14 @@ interface DeleteListModalProps {
     mode: string;
 }
 
-const DeleteListModal: React.FC<DeleteListModalProps> = ({
+export default function DeleteListModal({
     visible,
     onDismiss,
     onDelete,
     listTitle,
     language,
     mode
-}) => {
+}: DeleteListModalProps) {
     const handleDelete = () => {
         onDelete();
         onDismiss();
@@ -51,5 +50,3 @@ const DeleteListModal: React.FC<DeleteListModalProps> = ({
         </Portal>
     );
 };
-
-export default DeleteListModal;

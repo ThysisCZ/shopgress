@@ -13,7 +13,7 @@ interface EmailData {
 const { width } = Dimensions.get('window');
 const mobileSize = width < 568;
 
-function ForgotPassword() {
+export default function ForgotPassword() {
     const defaultForm = {
         email: ''
     }
@@ -162,8 +162,6 @@ function ForgotPassword() {
         </ScrollView >
     );
 }
-
-export default ForgotPassword;
 
 const styles = StyleSheet.create({
     forgotPasswordContainer: {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ScrollView, StyleSheet, Text, View, TouchableOpacity, ActivityIndicator } from "react-native";
-import { Card, Checkbox, Switch, List, Button, Divider } from "react-native-paper";
+import { Card, Checkbox, Switch, List, Button } from "react-native-paper";
+import { useRouter } from 'expo-router';
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useUserContext } from "../context/UserContext";
 import { useShoppingListsContext } from "../context/ShoppingListsContext";
@@ -11,7 +12,6 @@ import DeleteListModal from "../components/delete-list-modal";
 import AddItemModal from "../components/add-item-modal";
 import DeleteItemModal from "../components/delete-item-modal";
 import ShoppingListChart from "../components/shopping-list-chart";
-import { useRouter } from 'expo-router';
 
 const SERVER_URI = process.env.EXPO_PUBLIC_SERVER_URI;
 const USE_MOCKS = process.env.EXPO_PUBLIC_USE_MOCKS === "true";
@@ -346,7 +346,12 @@ export default function ShoppingLists() {
         }
     };
 
-    const handleViewDetail = (listId: string) => router.replace(`detail/${listId}`);
+    const handleViewDetail = (listId: string) => router.replace({
+        pathname: "/detail",
+        params: {
+            id: listId
+        }
+    });
 
     const renderQuantity = (item: ItemData) => {
         if (currentLanguage.id === "EN") return `${item.quantity} ${item.unit || ""}`;

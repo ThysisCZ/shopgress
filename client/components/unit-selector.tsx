@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { Dropdown } from 'react-native-element-dropdown';
 import { useLanguageContext } from "@/context/LanguageContext";
@@ -15,15 +15,15 @@ interface UnitSelectorProps {
     setUnit: (name: string) => void;
 }
 
-const LanguageSelector: React.FC<UnitSelectorProps> = ({
+export default function LanguageSelector({
     units,
     selectedUnit,
     setUnit
-}) => {
+}: UnitSelectorProps) {
     const { currentLanguage } = useLanguageContext();
     const [isFocus, setIsFocus] = useState(false);
     const currentUnit = units.find(unit => unit.name === selectedUnit);
-    const placeholder = currentLanguage.id === "EN" ? "Select a unit" : "Vyberte jednotku";
+    const placeholder = (currentLanguage.id === "EN" ? "No unit" : "Bez jednotky")
 
     return (
         <View>
@@ -45,12 +45,10 @@ const LanguageSelector: React.FC<UnitSelectorProps> = ({
     );
 };
 
-export default LanguageSelector;
-
 const styles = StyleSheet.create({
     dropdown: {
         height: 50,
-        width: 125,
+        width: 128,
         backgroundColor: 'white',
         borderColor: 'gray',
         borderWidth: 0.5,

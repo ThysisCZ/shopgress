@@ -36,6 +36,7 @@ function RootLayoutContent() {
                     <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
                     <Stack.Screen name="reset-password" options={{ headerShown: false }} />
                     <Stack.Screen name="shopping-lists" options={{ headerShown: false }} />
+                    <Stack.Screen name="detail" options={{ headerShown: false }} />
                 </Stack>
             </View>
         </View>

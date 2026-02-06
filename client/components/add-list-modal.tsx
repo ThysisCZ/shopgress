@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Portal, Dialog, Button, TextInput, HelperText, Divider } from "react-native-paper";
 
 interface AddListModalProps {
@@ -10,14 +10,14 @@ interface AddListModalProps {
     mode: string;
 }
 
-const AddListModal: React.FC<AddListModalProps> = ({
+export default function AddListModal({
     visible,
     onDismiss,
     onAdd,
     existingLists,
     language,
     mode
-}) => {
+}: AddListModalProps) {
     const [name, setName] = useState("");
     const [error, setError] = useState("");
 
@@ -74,5 +74,3 @@ const AddListModal: React.FC<AddListModalProps> = ({
         </Portal>
     );
 };
-
-export default AddListModal;
