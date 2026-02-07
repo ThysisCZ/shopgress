@@ -1,16 +1,18 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { Card, Button, List, IconButton } from "react-native-paper";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { Card, Button, List } from "react-native-paper";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import InviteMemberModal from "../components/invite-member-modal";
 import DeleteMemberModal from "../components/delete-member-modal";
 import { useShoppingListsContext } from "../context/ShoppingListsContext";
 import { useLanguageContext } from "../context/LanguageContext";
 import { useUserContext } from "../context/UserContext";
+import { useModeContext } from "@/context/ModeContext";
 
 interface User {
-    _id: string;
+    id: string;
     name: string;
+    email: string;
 }
 
 interface ShoppingList {
@@ -22,7 +24,7 @@ interface ShoppingList {
 
 interface MemberListProps {
     currentUser: User;
-    users: User[];
+    users: any[];
     shoppingList: ShoppingList;
     setShoppingList: (list: ShoppingList) => void;
 }
@@ -42,6 +44,7 @@ export default function MemberList({
 
     const { updateList } = useShoppingListsContext();
     const { currentLanguage } = useLanguageContext();
+    const { mode } = useModeContext();
     const { token } = useUserContext();
 
     const handleMembersInvited = async (newIds: string[]) => {
@@ -72,7 +75,7 @@ export default function MemberList({
         }
     };
 
-    const handleMemberDeleted = async (member: User) => {
+    const handleMemberDeleted = async (member: any) => {
         const updatedList = {
             ...shoppingList,
             memberIds: shoppingList?.memberIds.filter(id => id !== member._id)
@@ -101,63 +104,68 @@ export default function MemberList({
     };
 
     const handleInviteMemberShow = () => setInviteMemberShow(true);
-    const handleDeleteMemberShow = (member: User) => {
+    const handleDeleteMemberShow = (member: any) => {
         setSelectedMember(member);
         setDeleteMemberShow(true);
     };
 
     return (
         <>
-            <Card style={styles.card}>
+            <Card style={{ margin: 10, backgroundColor: mode === "light" ? "#f3f3f3" : "#272727" }}>
                 <Card.Title
                     title={currentLanguage.id === "EN" ? "Members" : "Členové"}
+                    titleStyle={{ color: mode === "light" ? "black" : "white" }}
                     right={() =>
-                        currentUser._id === shoppingList?.ownerId && (
+                        currentUser.id === shoppingList?.ownerId && (
                             <Button
                                 mode="contained"
                                 onPress={handleInviteMemberShow}
-                                icon={() => <MaterialCommunityIcons name="account-plus" size={20} color="white" />}
+                                icon={() => <MaterialCommunityIcons name="account-plus" size={20} color="darkblue" />}
+                                style={{ backgroundColor: "lightblue", marginRight: 15 }}
                             >
-                                {currentLanguage.id === "EN" ? "Invite" : "Pozvat"}
+                                <Text style={{ color: "darkblue" }}>
+                                    {currentLanguage.id === "EN" ? "Invite" : "Pozvat"}
+                                </Text>
                             </Button>
                         )
                     }
-                    titleStyle={{ fontSize: 18, fontWeight: "bold" }}
                 />
                 <Card.Content>
                     <List.Section>
                         <List.Accordion
-                            title={currentLanguage.id === "EN" ? "Show Members" : "Zobrazit členy"}
-                            style={styles.accordion}
+                            title=""
+                            style={{
+                                backgroundColor: mode === "light" ? "#e5e5e5" : "#1c191f",
+                                borderRadius: 12
+                            }}
+                            theme={{ colors: { background: mode === "light" ? "#f3f3f3" : "#272727" } }}
+                            rippleColor={"#afffff"}
                         >
                             <ScrollView>
-                                {users
-                                    .filter(user => shoppingList?.memberIds.includes(user._id))
-                                    .map(user => (
-                                        <List.Item
-                                            key={user._id}
-                                            title={
-                                                <View style={styles.listItem}>
-                                                    <MaterialCommunityIcons name="account" size={20} />
-                                                    <Text style={styles.memberName}>{user.name}</Text>
-                                                    {user._id === shoppingList?.ownerId && (
-                                                        <Text style={styles.ownerBadge}>
-                                                            {currentLanguage.id === "EN" ? "Owner" : "Vlastník"}
-                                                        </Text>
-                                                    )}
-                                                </View>
-                                            }
-                                            right={() =>
-                                                currentUser._id === shoppingList?.ownerId &&
-                                                user._id !== shoppingList?.ownerId && (
-                                                    <IconButton
-                                                        icon={() => <MaterialCommunityIcons name="close" size={20} color="white" />}
-                                                        onPress={() => handleDeleteMemberShow(user)}
-                                                    />
-                                                )
-                                            }
-                                        />
-                                    ))}
+                                {users.map(user => shoppingList?.memberIds.includes(user._id) && (
+                                    <List.Item
+                                        key={user._id}
+                                        title={() => (
+                                            <View style={styles.listItem}>
+                                                <MaterialCommunityIcons name="account" size={20} color={mode === "light" ? "black" : "white"} />
+                                                <Text style={[styles.memberName, { color: mode === "light" ? "black" : "white" }]}>{user.name}</Text>
+                                                {user._id === shoppingList?.ownerId && (
+                                                    <Text style={styles.ownerBadge}>
+                                                        {currentLanguage.id === "EN" ? "Owner" : "Vlastník"}
+                                                    </Text>
+                                                )}
+                                            </View>
+                                        )}
+                                        right={() =>
+                                            currentUser.id === shoppingList?.ownerId &&
+                                            user._id !== shoppingList?.ownerId && (
+                                                <TouchableOpacity onPress={() => handleDeleteMemberShow(user)}>
+                                                    <MaterialCommunityIcons name="close" size={20} color="red" />
+                                                </TouchableOpacity>
+                                            )
+                                        }
+                                    />
+                                ))}
                             </ScrollView>
                         </List.Accordion>
                     </List.Section>
@@ -176,34 +184,28 @@ export default function MemberList({
                 show={deleteMemberShow}
                 setDeleteMemberShow={setDeleteMemberShow}
                 onMemberDelete={handleMemberDeleted}
-                user={selectedMember}
+                user={selectedMember as User}
             />
         </>
     );
 }
 
 const styles = StyleSheet.create({
-    card: {
-        margin: 10,
-        backgroundColor: "salmon"
-    },
-    accordion: {
-        backgroundColor: "lightsalmon"
-    },
     listItem: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 10
+        gap: 5
     },
     memberName: {
-        fontWeight: "bold",
-        flex: 1
+        flex: 1,
+        fontWeight: "bold"
     },
     ownerBadge: {
-        backgroundColor: "#2196F3",
-        color: "white",
+        backgroundColor: "aqua",
+        color: "black",
         paddingHorizontal: 6,
+        paddingVertical: 3,
         borderRadius: 4,
-        fontSize: 12
+        fontSize: 12,
     }
 });

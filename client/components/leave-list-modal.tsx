@@ -1,7 +1,8 @@
 import React from "react";
 import { View } from "react-native";
-import { Portal, Modal, Button, Text } from "react-native-paper";
+import { Portal, Modal, Button, Text, Divider } from "react-native-paper";
 import { useLanguageContext } from "../context/LanguageContext";
+import { useModeContext } from "@/context/ModeContext";
 
 type LeaveListModalProps = {
     show: boolean;
@@ -16,8 +17,8 @@ export default function LeaveListModal({
     onListLeave,
     list
 }: LeaveListModalProps) {
-
     const { currentLanguage } = useLanguageContext();
+    const { mode } = useModeContext();
 
     const handleClose = () => setLeaveListShow(false);
 
@@ -35,12 +36,12 @@ export default function LeaveListModal({
                     margin: 20,
                     padding: 20,
                     borderRadius: 12,
-                    backgroundColor: "white"
+                    backgroundColor: mode === "light" ? "#555" : "#1c191f"
                 }}
             >
                 <Text
                     variant="titleLarge"
-                    style={{ marginBottom: 20, textAlign: "center" }}
+                    style={{ marginBottom: 20, textAlign: "left" }}
                 >
                     {currentLanguage.id === "EN"
                         ? "Leave List"
@@ -48,11 +49,14 @@ export default function LeaveListModal({
                     ({list?.title})?
                 </Text>
 
-                <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
+                <Divider />
+
+                <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 20 }}>
                     <Button
-                        mode="outlined"
+                        mode="text"
                         onPress={handleClose}
                         style={{ marginRight: 10 }}
+                        labelStyle={{ color: "white" }}
                     >
                         {currentLanguage.id === "EN" ? "Cancel" : "Zrušit"}
                     </Button>
@@ -61,6 +65,7 @@ export default function LeaveListModal({
                         mode="contained"
                         buttonColor="#d9534f"
                         onPress={handleSubmit}
+                        labelStyle={{ color: "white" }}
                     >
                         {currentLanguage.id === "EN" ? "Leave" : "Opustit"}
                     </Button>

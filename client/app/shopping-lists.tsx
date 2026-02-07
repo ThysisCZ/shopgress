@@ -373,7 +373,7 @@ export default function ShoppingLists() {
                         <Text style={{ color: mode === "light" ? "#000" : "#fff" }}>
                             {currentLanguage.id === "EN" ? "Show archived" : "Zobrazit uložené"}
                         </Text>
-                        <Switch value={showArchived} onValueChange={() => setShowArchived(!showArchived)} />
+                        <Switch value={showArchived} onValueChange={() => setShowArchived(!showArchived)} color="aqua" />
                     </View>
 
                     <Button mode="contained" icon="plus" onPress={() => setAddListVisible(true)}
@@ -389,10 +389,11 @@ export default function ShoppingLists() {
                 <List.Section>
                     <List.Accordion
                         style={{
-                            backgroundColor: mode === "light" ? "#dddddd" : "#1c191f",
+                            backgroundColor: mode === "light" ? "#e5e5e5" : "#1c191f",
                             borderRadius: 12, marginBottom: 10
                         }}
                         theme={{ colors: { background: mode === "light" ? "white" : "black" } }}
+                        rippleColor={"#afffff"}
                         title={currentLanguage.id === "EN" ? "Lists" : "Seznamy"}
                         titleStyle={{ color: mode === "light" ? "black" : "white" }}
                         expanded={listsAccordionOpen}
@@ -438,7 +439,7 @@ export default function ShoppingLists() {
                                         )}
                                     </Card.Content>
                                     <Card.Actions>
-                                        <View style={{ flex: 1, flexDirection: "row", justifyContent: "center", gap: 8, marginRight: 5 }}>
+                                        <View style={{ flex: 1, flexDirection: "row", justifyContent: isOwner(list) ? "center" : "flex-end", gap: 8, marginRight: 5 }}>
                                             {isOwner(list) && (
                                                 <>
                                                     <Button icon="delete" mode="contained" onPress={() => handleDeleteListShow(list)}
@@ -464,10 +465,11 @@ export default function ShoppingLists() {
 
                     <List.Accordion
                         style={{
-                            backgroundColor: mode === "light" ? "#dddddd" : "#1c191f",
+                            backgroundColor: mode === "light" ? "#e5e5e5" : "#1c191f",
                             borderRadius: 12
                         }}
                         theme={{ colors: { background: mode === "light" ? "white" : "black" } }}
+                        rippleColor={"#afffff"}
                         title={currentLanguage.id === "EN" ? "Statistics" : "Statistiky"}
                         titleStyle={{ color: mode === "light" ? "black" : "white" }}
                         expanded={statsAccordionOpen}
@@ -534,5 +536,5 @@ const styles = StyleSheet.create({
     header: { marginBottom: 20 },
     title: { fontSize: 24, fontWeight: "bold" },
     switchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginVertical: 10 },
-    itemRow: { flexDirection: "row", alignItems: "center", paddingVertical: 5 }
+    itemRow: { flexDirection: "row", alignItems: "center", paddingVertical: 5, height: 50 }
 });

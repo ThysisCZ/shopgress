@@ -5,11 +5,14 @@ import LeaveListModal from "../components/leave-list-modal";
 import { useShoppingListsContext } from "../context/ShoppingListsContext";
 import { useLanguageContext } from "../context/LanguageContext";
 import { useUserContext } from "../context/UserContext";
+import { useModeContext } from "@/context/ModeContext";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { useRouter } from "expo-router";
 
 interface User {
-    _id: string;
+    id: string;
     name: string;
+    email: string;
 }
 
 interface ShoppingList {
@@ -21,7 +24,7 @@ interface ShoppingList {
 
 interface ListHeaderProps {
     currentUser: User;
-    users: User[];
+    users: any[];
     shoppingList: ShoppingList;
     setShoppingList: (list: ShoppingList) => void;
     shoppingLists: ShoppingList[];
@@ -44,7 +47,9 @@ export default function ListHeader({
 
     const { updateList } = useShoppingListsContext();
     const { currentLanguage } = useLanguageContext();
+    const { mode } = useModeContext();
     const { token } = useUserContext();
+    const router = useRouter();
 
     useEffect(() => {
         if (!isEditing) {
@@ -59,12 +64,12 @@ export default function ListHeader({
         if (USE_MOCKS) {
             const updatedList = {
                 ...shoppingList,
-                memberIds: shoppingList?.memberIds.filter(id => id !== currentUser._id)
+                memberIds: shoppingList?.memberIds.filter(id => id !== currentUser.id)
             };
             await updateList(updatedList);
         } else {
             const dtoIn = {
-                memberIds: shoppingList?.memberIds.filter(id => id !== currentUser._id)
+                memberIds: shoppingList?.memberIds.filter(id => id !== currentUser.id)
             };
 
             try {
@@ -76,6 +81,8 @@ export default function ListHeader({
                     },
                     body: JSON.stringify(dtoIn)
                 });
+
+                router.replace("/shopping-lists");
 
                 const dtoOut = await response.json();
                 return dtoOut;
@@ -130,9 +137,12 @@ export default function ListHeader({
     };
 
     return (
-        <Card style={{ margin: 10, backgroundColor: "salmon" }}>
+        <Card style={{ margin: 10, backgroundColor: mode === "light" ? "#f3f3f3" : "#272727" }}>
             <Card.Content>
-                <ScrollView horizontal contentContainerStyle={{ alignItems: "center" }}>
+                <ScrollView horizontal contentContainerStyle={{
+                    flex: 1, alignItems: "center", flexDirection: "row",
+                    justifyContent: currentUser.id === ownerId ? "flex-start" : "space-between"
+                }}>
                     {isEditing ? (
                         <TextInput
                             style={[
@@ -145,10 +155,10 @@ export default function ListHeader({
                             placeholder={currentLanguage.id === "EN" ? "List title" : "Název seznamu"}
                         />
                     ) : (
-                        <Text style={styles.title}>{edit}</Text>
+                        <Text style={[styles.title, { color: mode === "light" ? "black" : "white" }]}>{edit}</Text>
                     )}
 
-                    {currentUser._id === ownerId && (
+                    {currentUser.id === ownerId && (
                         isEditing ? (
                             <>
                                 <IconButton
@@ -168,26 +178,30 @@ export default function ListHeader({
                             </>
                         ) : (
                             <IconButton
-                                icon={() => <MaterialCommunityIcons name="pencil" size={24} color="white" />}
+                                icon={() => <MaterialCommunityIcons name="pencil" size={24} color={mode === "light" ? "black" : "white"} />}
                                 onPress={() => setIsEditing(true)}
                             />
                         )
                     )}
+
+                    {currentUser.id !== ownerId && (
+                        <Button
+                            mode="contained"
+                            onPress={handleLeaveListShow}
+                            style={{ backgroundColor: "red" }}
+                            labelStyle={{ color: "white" }}
+                        >
+                            {currentLanguage.id === "EN" ? "Leave" : "Opustit"}
+                        </Button>
+                    )}
                 </ScrollView>
 
-                <Text style={{ fontSize: 12, color: "#333", marginTop: 5 }}>
+                <Text style={{
+                    fontSize: 12, color: mode === "light" ? "black" : "white",
+                    marginTop: 5, marginBottom: 25
+                }}>
                     {currentLanguage.id === "EN" ? "Owner" : "Vlastník"}: {listOwner?.name}
                 </Text>
-
-                {currentUser._id !== ownerId && (
-                    <Button
-                        mode="contained"
-                        onPress={handleLeaveListShow}
-                        style={{ marginTop: 10 }}
-                    >
-                        {currentLanguage.id === "EN" ? "Leave" : "Opustit"}
-                    </Button>
-                )}
             </Card.Content>
 
             <LeaveListModal

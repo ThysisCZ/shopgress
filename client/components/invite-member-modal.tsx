@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { Portal, Modal, Button, Text, TextInput, Checkbox, List } from "react-native-paper";
+import { Portal, Modal, Button, Text, TextInput, Checkbox, List, Divider } from "react-native-paper";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useLanguageContext } from "../context/LanguageContext";
+import { useModeContext } from "@/context/ModeContext";
 
 interface User {
     _id: string;
     name: string;
+    email: string;
 }
 
 interface ShoppingList {
@@ -18,7 +20,7 @@ interface InviteMemberModalProps {
     show: boolean;
     setInviteMemberShow: (value: boolean) => void;
     onMembersInvite: (userIds: string[]) => void;
-    users: User[];
+    users: User[],
     list: ShoppingList;
 }
 
@@ -35,6 +37,7 @@ export default function InviteMemberModal({
     const [searched, setSearched] = useState(false);
     const [searchedUsers, setSearchedUsers] = useState<User[]>([]);
     const { currentLanguage } = useLanguageContext();
+    const { mode } = useModeContext();
 
     const handleClose = () => {
         setSelectedUsers([]);
@@ -57,6 +60,8 @@ export default function InviteMemberModal({
 
     const handleSubmit = () => {
         onMembersInvite(selectedUsers);
+        setSearch("");
+        setSearched(false);
         setSelectedUsers([]);
         setInviteMemberShow(false);
     };
@@ -77,7 +82,7 @@ export default function InviteMemberModal({
         setSearched(true);
     };
 
-    const displayedUsers = searched ? searchedUsers : availableUsers;
+    const displayedUsers = searched ? searchedUsers : [];
 
     return (
         <Portal>
@@ -88,12 +93,12 @@ export default function InviteMemberModal({
                     margin: 20,
                     padding: 20,
                     borderRadius: 14,
-                    backgroundColor: "white"
+                    backgroundColor: mode === "light" ? "#555" : "#1c191f"
                 }}
             >
                 <Text
                     variant="titleLarge"
-                    style={{ marginBottom: 16, textAlign: "center" }}
+                    style={{ marginTop: 5, marginBottom: 20, textAlign: "left" }}
                 >
                     {currentLanguage.id === "EN"
                         ? "Invite Members"
@@ -117,42 +122,42 @@ export default function InviteMemberModal({
                         }
                         value={search}
                         onChangeText={setSearch}
-                        style={{ flex: 1 }}
+                        style={{ flex: 1, height: 30 }}
+                        activeOutlineColor="aqua"
                     />
 
-                    <Button mode="contained" onPress={handleSearch}>
+                    <Button mode="contained" onPress={handleSearch} style={{ backgroundColor: "aqua" }}>
                         <MaterialCommunityIcons
                             name="account-search"
                             size={20}
-                            color="white"
+                            color="darkblue"
                         />
                     </Button>
                 </View>
 
-                {displayedUsers.length === 0 ? (
+                {searched && displayedUsers.length === 0 ? (
                     <Text
                         style={{
                             textAlign: "center",
                             color: "grey",
-                            marginTop: 10
+                            marginTop: 10,
+                            marginBottom: 25
                         }}
                     >
                         {currentLanguage.id === "EN"
-                            ? "No users to invite."
-                            : "Žádní uživatelé k pozvání."}
+                            ? "No users to invite"
+                            : "Žádní uživatelé k pozvání"}
                     </Text>
                 ) : (
                     <View style={{ maxHeight: 260 }}>
                         {displayedUsers.map((user) => (
                             <List.Item
                                 key={user._id}
-                                title={user.name}
-                                left={() => (
-                                    <MaterialCommunityIcons
-                                        name="account"
-                                        size={24}
-                                        style={{ marginRight: 8 }}
-                                    />
+                                title={() => (
+                                    <View style={{ flex: 1, flexDirection: "row", gap: 10, marginTop: 7 }}>
+                                        <MaterialCommunityIcons name="account" size={20} color={"white"} />
+                                        <Text style={{ color: "white" }}>{user.name}</Text>
+                                    </View>
                                 )}
                                 right={() => (
                                     <Checkbox
@@ -164,21 +169,17 @@ export default function InviteMemberModal({
                                         onPress={() =>
                                             handleUserSelection(user._id)
                                         }
+                                        uncheckedColor="white"
+                                        color="aqua"
                                     />
                                 )}
-                                style={{
-                                    backgroundColor: searched
-                                        ? "rgba(255, 160, 122, 0.3)"
-                                        : "transparent",
-                                    borderRadius: 6,
-                                    marginBottom: 6
-                                }}
                             />
                         ))}
                     </View>
                 )}
 
-                {/* Footer buttons */}
+                <Divider />
+
                 <View
                     style={{
                         flexDirection: "row",
@@ -187,9 +188,10 @@ export default function InviteMemberModal({
                     }}
                 >
                     <Button
-                        mode="outlined"
+                        mode="text"
                         onPress={handleClose}
                         style={{ marginRight: 10 }}
+                        textColor="white"
                     >
                         {currentLanguage.id === "EN" ? "Cancel" : "Zrušit"}
                     </Button>
@@ -198,6 +200,8 @@ export default function InviteMemberModal({
                         mode="contained"
                         disabled={selectedUsers.length === 0}
                         onPress={handleSubmit}
+                        textColor="darkblue"
+                        buttonColor="aqua"
                     >
                         {currentLanguage.id === "EN" ? "Invite" : "Pozvat"} (
                         {selectedUsers.length})

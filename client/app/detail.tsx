@@ -4,7 +4,7 @@ import { useModeContext } from '../context/ModeContext';
 import { useLanguageContext } from '../context/LanguageContext';
 import { useUserContext } from '../context/UserContext';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, TouchableOpacity, ScrollView, View, Text } from 'react-native';
+import { StyleSheet, TouchableOpacity, ScrollView, View, Text, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ListHeader from '../components/list-header';
 import MemberList from '../components/member-list';
@@ -70,10 +70,18 @@ export default function Detail() {
 
     if (shoppingListCall?.state === "error") {
         return (
-            <View>
+            <ScrollView style={{ flex: 1, backgroundColor: mode === "light" ? "#fff" : "#000" }}>
                 <Text style={{ textAlign: 'center', fontWeight: 'bold' }}>{currentLanguage.id === "EN" ? "404 - Not Found" : "404 - Nenalezeno"}</Text>
                 <Text style={{ textAlign: 'center' }}>{currentLanguage.id === "EN" ? "Shopping list not found." : "Seznam nebyl nalezen."}</Text>
-            </View>
+            </ScrollView>
+        );
+    }
+
+    if (shoppingListCall?.state === "pending") {
+        return (
+            <ScrollView style={{ flex: 1, backgroundColor: mode === "light" ? "#fff" : "#000" }}>
+                <ActivityIndicator size="large" color={mode === "light" ? "black" : "white"} style={{ marginTop: 50 }} />
+            </ScrollView>
         );
     }
 
