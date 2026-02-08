@@ -143,6 +143,7 @@ export default function SignUpScreen() {
                             onChangeText={(val) => setField("password", val)}
                             maxLength={20}
                             secureTextEntry={!showPassword}
+                            keyboardType="default"
                         />
                         <TouchableOpacity
                             style={styles.togglePasswordBtn}

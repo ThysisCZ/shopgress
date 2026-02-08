@@ -122,6 +122,7 @@ export default function LoginScreen() {
                             onChangeText={(val) => setField("password", val)}
                             maxLength={20}
                             secureTextEntry={!showPassword}
+                            keyboardType="default"
                         />
                         <TouchableOpacity
                             style={styles.togglePasswordBtn}

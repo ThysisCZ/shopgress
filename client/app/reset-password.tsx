@@ -174,6 +174,7 @@ export default function ForgotPassword() {
                             onChangeText={(val) => setField("newPassword", val)}
                             maxLength={20}
                             secureTextEntry={!showPassword}
+                            keyboardType="default"
                         />
                         <TouchableOpacity
                             style={styles.togglePasswordBtn}
@@ -203,6 +204,7 @@ export default function ForgotPassword() {
                             onChangeText={(val) => setField("confirmPassword", val)}
                             maxLength={20}
                             secureTextEntry={!showConfirmPassword}
+                            keyboardType="default"
                         />
                         <TouchableOpacity
                             style={styles.togglePasswordBtn}
