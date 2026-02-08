@@ -30,8 +30,8 @@ interface ItemListProps {
     setShoppingList: (list: ShoppingList) => void;
 }
 
-const SERVER_URI = process.env.REACT_APP_SERVER_URI;
-const USE_MOCKS = process.env.REACT_APP_USE_MOCKS === "true";
+const SERVER_URI = process.env.EXPO_PUBLIC_SERVER_URI;
+const USE_MOCKS = process.env.EXPO_PUBLIC_USE_MOCKS === "true";
 
 export default function ItemList({ shoppingList, setShoppingList }: ItemListProps) {
     const [showResolved, setShowResolved] = useState(false);
@@ -58,14 +58,18 @@ export default function ItemList({ shoppingList, setShoppingList }: ItemListProp
         if (USE_MOCKS) {
             await updateList(updatedList);
         } else {
+            const dtoIn = {
+                items: updatedItems
+            }
+
             try {
                 await fetch(`${SERVER_URI}/shoppingList/update/${shoppingList?._id}`, {
                     method: "PATCH",
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`
+                        "Authorization": `Bearer ${token}`
                     },
-                    body: JSON.stringify({ items: updatedItems })
+                    body: JSON.stringify(dtoIn)
                 });
             } catch (e: any) {
                 console.error("Error: ", e.message);
@@ -83,15 +87,20 @@ export default function ItemList({ shoppingList, setShoppingList }: ItemListProp
             const refreshed = await getListById(shoppingList?._id);
             setShoppingList(refreshed);
         } else {
+            const dtoIn = {
+                items: [...shoppingList?.items, item]
+            }
+
             try {
                 await fetch(`${SERVER_URI}/shoppingList/update/${shoppingList?._id}`, {
                     method: "PATCH",
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`
+                        "Authorization": `Bearer ${token}`
                     },
-                    body: JSON.stringify({ items: [...shoppingList?.items, item] })
+                    body: JSON.stringify(dtoIn)
                 });
+
                 const refreshed = await getListById(shoppingList?._id);
                 setShoppingList(refreshed);
             } catch (e: any) {
@@ -107,14 +116,18 @@ export default function ItemList({ shoppingList, setShoppingList }: ItemListProp
         if (USE_MOCKS) {
             await updateList(updatedList);
         } else {
+            const dtoIn = {
+                items: updatedItems
+            }
+
             try {
                 await fetch(`${SERVER_URI}/shoppingList/update/${shoppingList?._id}`, {
                     method: "PATCH",
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`
+                        "Authorization": `Bearer ${token}`
                     },
-                    body: JSON.stringify({ items: updatedItems })
+                    body: JSON.stringify(dtoIn)
                 });
             } catch (e: any) {
                 console.error("Error: ", e.message);

@@ -106,7 +106,7 @@ export default function ForgotPassword() {
                     />
                     {validated && formData.email.length === 0 && (
                         <Text style={{ color: '#721c24' }}>
-                            {currentLanguage?.id === "EN" ? "This field is required." : "Toto pole je povinné."}
+                            {currentLanguage?.id === "EN" ? "This field is required" : "Toto pole je povinné"}
                         </Text>
                     )}
                 </View>

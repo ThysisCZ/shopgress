@@ -23,12 +23,12 @@ export default function AddListModal({
 
     const validate = () => {
         if (!name.trim()) {
-            setError(language === "EN" ? "This field is required." : "Toto pole je povinné.");
+            setError(language === "EN" ? "This field is required" : "Toto pole je povinné");
             return false;
         }
 
         if (existingLists.some(list => list.trim().toLowerCase() === name.trim().toLowerCase())) {
-            setError(language === "EN" ? "This list already exists." : "Tento seznam již existuje.");
+            setError(language === "EN" ? "This list already exists" : "Tento seznam již existuje");
             return false;
         }
 
@@ -58,13 +58,13 @@ export default function AddListModal({
                         error={!!error}
                     />
 
-                    {error ? <HelperText type="error">{error}</HelperText> : null}
+                    {error ? <HelperText type="error" style={{ marginLeft: -10 }}>{error}</HelperText> : null}
                 </Dialog.Content>
 
                 <Divider style={{ marginBottom: 25 }} />
 
                 <Dialog.Actions>
-                    <Button onPress={onDismiss} textColor="white">{language === "EN" ? "Cancel" : "Zrušit"}</Button>
+                    <Button onPress={() => { onDismiss(), setError("") }} textColor="white">{language === "EN" ? "Cancel" : "Zrušit"}</Button>
                     <Button mode="contained" onPress={handleAdd} buttonColor="lightgreen" textColor="darkgreen"
                         style={{ width: 80 }}>
                         {language === "EN" ? "Add" : "Přidat"}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Text, TextInput, StyleSheet, ScrollView } from "react-native";
-import { Button, Card, IconButton } from "react-native-paper";
+import { Text, TextInput, StyleSheet, ScrollView, View } from "react-native";
+import { Button, Card, IconButton, HelperText } from "react-native-paper";
 import LeaveListModal from "../components/leave-list-modal";
 import { useShoppingListsContext } from "../context/ShoppingListsContext";
 import { useLanguageContext } from "../context/LanguageContext";
@@ -44,6 +44,7 @@ export default function ListHeader({
     const [edit, setEdit] = useState(shoppingList?.title);
     const [leaveListShow, setLeaveListShow] = useState(false);
     const [validated, setValidated] = useState(false);
+    const [error, setError] = useState("");
 
     const { updateList } = useShoppingListsContext();
     const { currentLanguage } = useLanguageContext();
@@ -54,6 +55,7 @@ export default function ListHeader({
     useEffect(() => {
         if (!isEditing) {
             setEdit(shoppingList?.title);
+            setError("");
         }
     }, [shoppingList?.title, isEditing]);
 
@@ -94,17 +96,25 @@ export default function ListHeader({
 
     const handleLeaveListShow = () => setLeaveListShow(true);
 
+    // Check duplicate titles
+    const isDuplicate = shoppingLists?.some(
+        list =>
+            list?._id !== shoppingList?._id &&
+            list?.title?.trim().toLowerCase() === edit?.trim().toLowerCase()
+    );
+
     const handleEdited = async () => {
         setValidated(true);
 
-        // Check duplicate titles
-        const isDuplicate = shoppingLists?.some(
-            list =>
-                list?._id !== shoppingList?._id &&
-                list?.title?.trim().toLowerCase() === edit.trim().toLowerCase()
-        );
-
-        if (edit.trim().length === 0 || isDuplicate) return;
+        if (edit?.trim().length === 0) {
+            const error = currentLanguage.id === "EN" ? "This field is required" : "Toto pole je povinné";
+            setError(error);
+            return;
+        } else if (isDuplicate) {
+            const error = currentLanguage.id === "EN" ? "This list already exists" : "Tento seznam již existuje";
+            setError(error);
+            return;
+        }
 
         const updatedList = { ...shoppingList, title: edit };
 
@@ -113,7 +123,10 @@ export default function ListHeader({
             setIsEditing(false);
             setValidated(false);
         } else {
-            const dtoIn = { title: updatedList.title };
+            const dtoIn = {
+                title: updatedList.title
+            };
+
             try {
                 const response = await fetch(`${SERVER_URI}/shoppingList/update/${shoppingList?._id}`, {
                     method: "PATCH",
@@ -144,23 +157,28 @@ export default function ListHeader({
                     justifyContent: currentUser.id === ownerId ? "flex-start" : "space-between"
                 }}>
                     {isEditing ? (
-                        <TextInput
-                            style={[
-                                styles.input,
-                                validated && edit.trim().length === 0 && styles.invalidInput
-                            ]}
-                            value={edit}
-                            maxLength={20}
-                            onChangeText={text => setEdit(text)}
-                            placeholder={currentLanguage.id === "EN" ? "List title" : "Název seznamu"}
-                        />
+                        <View>
+                            <TextInput
+                                style={[
+                                    styles.input,
+                                    validated && error && styles.invalidInput
+                                ]}
+                                value={edit}
+                                maxLength={20}
+                                onChangeText={text => setEdit(text)}
+                                placeholder={currentLanguage.id === "EN" ? "List title" : "Název seznamu"}
+                            />
+                            {error ? (
+                                <HelperText type="error" style={{ marginLeft: -10 }}>{error}</HelperText>
+                            ) : null}
+                        </View>
                     ) : (
                         <Text style={[styles.title, { color: mode === "light" ? "black" : "white" }]}>{edit}</Text>
                     )}
 
                     {currentUser.id === ownerId && (
                         isEditing ? (
-                            <>
+                            <View style={{ flex: 1, flexDirection: "row", marginBottom: error ? 27 : 0 }}>
                                 <IconButton
                                     icon={() => <MaterialCommunityIcons name="check" size={24} color="white" />}
                                     mode="contained"
@@ -175,10 +193,11 @@ export default function ListHeader({
                                         setValidated(false);
                                     }}
                                 />
-                            </>
+                            </View>
                         ) : (
                             <IconButton
-                                icon={() => <MaterialCommunityIcons name="pencil" size={24} color={mode === "light" ? "black" : "white"} />}
+                                icon={() => <MaterialCommunityIcons name="pencil" size={24} color={mode === "light" ? "black" : "white"}
+                                    style={{ marginLeft: -15 }} />}
                                 onPress={() => setIsEditing(true)}
                             />
                         )

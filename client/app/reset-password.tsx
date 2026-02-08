@@ -62,8 +62,8 @@ export default function ForgotPassword() {
             setMessage({
                 type: 'error',
                 text: currentLanguage.id === "EN"
-                    ? "Passwords do not match."
-                    : "Hesla se neshodují."
+                    ? "Passwords do not match"
+                    : "Hesla se neshodují"
             });
             return;
         }
@@ -88,7 +88,7 @@ export default function ForgotPassword() {
 
             if (!verifyResponse.ok) {
                 setResetCall({ state: "error", error: verifyData.message });
-                setMessage({ type: 'error', text: verifyData.message || (currentLanguage.id === "EN" ? "Invalid reset code." : "Neplatný kód.") });
+                setMessage({ type: 'error', text: verifyData.message || (currentLanguage.id === "EN" ? "Invalid reset code" : "Neplatný kód") });
                 return;
             }
 
@@ -116,8 +116,8 @@ export default function ForgotPassword() {
                 setMessage({
                     type: 'success',
                     text: currentLanguage.id === "EN"
-                        ? "Password reset successful."
-                        : "Heslo bylo úspěšně změněno."
+                        ? "Password reset successful"
+                        : "Heslo bylo úspěšně změněno"
                 });
 
                 // Clear form
@@ -131,7 +131,7 @@ export default function ForgotPassword() {
             } else {
                 console.error('Password reset failed: ' + resetData.message)
                 setResetCall({ state: "error", error: resetData.message });
-                setMessage({ type: 'error', text: resetData.message || (currentLanguage.id === "EN" ? "Failed to reset password." : "Nepodařilo se změnit heslo.") });
+                setMessage({ type: 'error', text: resetData.message || (currentLanguage.id === "EN" ? "Failed to reset password" : "Nepodařilo se změnit heslo") });
             }
         } catch (e) {
             console.error('Password reset error:', e)
@@ -158,7 +158,7 @@ export default function ForgotPassword() {
                     />
                     {validated && formData.code.length === 0 && (
                         <Text style={{ color: '#721c24' }}>
-                            {currentLanguage?.id === "EN" ? "This field is required." : "Toto pole je povinné."}
+                            {currentLanguage?.id === "EN" ? "This field is required" : "Toto pole je povinné"}
                         </Text>
                     )}
                 </View>
@@ -187,7 +187,7 @@ export default function ForgotPassword() {
                     </View>
                     {validated && formData.newPassword.length === 0 && (
                         <Text style={{ color: '#721c24' }}>
-                            {currentLanguage?.id === "EN" ? "This field is required." : "Toto pole je povinné."}
+                            {currentLanguage?.id === "EN" ? "This field is required" : "Toto pole je povinné"}
                         </Text>
                     )}
                 </View>
@@ -216,7 +216,7 @@ export default function ForgotPassword() {
                     </View>
                     {validated && formData.confirmPassword.length === 0 && (
                         <Text style={{ color: '#721c24' }}>
-                            {currentLanguage?.id === "EN" ? "This field is required." : "Toto pole je povinné."}
+                            {currentLanguage?.id === "EN" ? "This field is required" : "Toto pole je povinné"}
                         </Text>
                     )}
                 </View>

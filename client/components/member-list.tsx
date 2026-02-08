@@ -56,7 +56,10 @@ export default function MemberList({
         if (USE_MOCKS) {
             await updateList(updatedList);
         } else {
-            const dtoIn = { memberIds: [...shoppingList?.memberIds, ...newIds] };
+            const dtoIn = {
+                memberIds: [...shoppingList?.memberIds, ...newIds]
+            };
+
             try {
                 const response = await fetch(`${SERVER_URI}/shoppingList/update/${shoppingList._id}`, {
                     method: "PATCH",
@@ -84,7 +87,10 @@ export default function MemberList({
         if (USE_MOCKS) {
             await updateList(updatedList);
         } else {
-            const dtoIn = { memberIds: shoppingList?.memberIds.filter(id => id !== member._id) };
+            const dtoIn = {
+                memberIds: shoppingList?.memberIds.filter(id => id !== member._id)
+            };
+
             try {
                 const response = await fetch(`${SERVER_URI}/shoppingList/update/${shoppingList?._id}`, {
                     method: "PATCH",

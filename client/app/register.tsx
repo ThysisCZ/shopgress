@@ -111,7 +111,7 @@ export default function SignUpScreen() {
                     />
                     {validated && formData.name.length === 0 && (
                         <Text style={{ color: '#721c24' }}>
-                            {currentLanguage?.id === "EN" ? "This field is required." : "Toto pole je povinné."}
+                            {currentLanguage?.id === "EN" ? "This field is required" : "Toto pole je povinné"}
                         </Text>
                     )}
                 </View>
@@ -127,7 +127,7 @@ export default function SignUpScreen() {
                     />
                     {validated && formData.email.length === 0 && (
                         <Text style={{ color: '#721c24' }}>
-                            {currentLanguage?.id === "EN" ? "This field is required." : "Toto pole je povinné."}
+                            {currentLanguage?.id === "EN" ? "This field is required" : "Toto pole je povinné"}
                         </Text>
                     )}
                 </View>
@@ -156,7 +156,7 @@ export default function SignUpScreen() {
                     </View>
                     {validated && formData.password.length === 0 && (
                         <Text style={{ color: '#721c24' }}>
-                            {currentLanguage?.id === "EN" ? "This field is required." : "Toto pole je povinné."}
+                            {currentLanguage?.id === "EN" ? "This field is required" : "Toto pole je povinné"}
                         </Text>
                     )}
                 </View>

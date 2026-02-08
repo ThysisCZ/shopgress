@@ -79,7 +79,7 @@ export default function LoginScreen() {
                 setValidated(false);
             } else {
                 setLoginCall({ state: "error", error: data.message });
-                setMessage({ type: 'error', text: currentLanguage?.id === "EN" ? "Incorrect email or password." : "Nesprávný email nebo heslo." });
+                setMessage({ type: 'error', text: currentLanguage?.id === "EN" ? "Incorrect email or password" : "Nesprávný email nebo heslo" });
             }
         } catch (e: any) {
             console.error('Login error:', e);
@@ -106,7 +106,7 @@ export default function LoginScreen() {
                     />
                     {validated && formData.email.length === 0 && (
                         <Text style={{ color: '#721c24' }}>
-                            {currentLanguage?.id === "EN" ? "This field is required." : "Toto pole je povinné."}
+                            {currentLanguage?.id === "EN" ? "This field is required" : "Toto pole je povinné"}
                         </Text>
                     )}
                 </View>
@@ -135,7 +135,7 @@ export default function LoginScreen() {
                     </View>
                     {validated && formData.password.length === 0 && (
                         <Text style={{ color: '#721c24' }}>
-                            {currentLanguage?.id === "EN" ? "This field is required." : "Toto pole je povinné."}
+                            {currentLanguage?.id === "EN" ? "This field is required" : "Toto pole je povinné"}
                         </Text>
                     )}
                 </View>

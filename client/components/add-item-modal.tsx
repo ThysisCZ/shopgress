@@ -38,11 +38,14 @@ export default function AddItemModal({
     const [name, setName] = useState("");
     const [amount, setAmount] = useState("");
     const [unit, setUnit] = useState("");
-    const [errors, setErrors] = useState({
+
+    const defaultErrors = {
         name: "",
         amount: "",
         unit: "",
-    });
+    }
+
+    const [errors, setErrors] = useState(defaultErrors);
 
     const renderUnit = (unit: string) => {
         if (language === "EN") return unit;
@@ -77,18 +80,18 @@ export default function AddItemModal({
         const newErrors = { name: "", amount: "", unit: "" };
 
         if (!name.trim()) {
-            newErrors.name = (language === "EN" ? "This field is required." : "Toto pole je povinné.");
+            newErrors.name = (language === "EN" ? "This field is required" : "Toto pole je povinné");
             valid = false;
         } else if (existingItems.some(item => item.trim().toLowerCase() === name.trim().toLowerCase())) {
-            newErrors.name = (language === "EN" ? "Item already exists in this list." : "Tuto položku již máte v seznamu.");
+            newErrors.name = (language === "EN" ? "Item already exists in this list" : "Tuto položku již máte v seznamu");
             valid = false;
         }
 
         if (!amount.trim()) {
-            newErrors.amount = (language === "EN" ? "This field is required." : "Toto pole je povinné.");
+            newErrors.amount = (language === "EN" ? "This field is required" : "Toto pole je povinné");
             valid = false;
         } else if (isNaN(Number(amount)) || Number(amount) <= 0) {
-            newErrors.amount = (language === "EN" ? "Enter a valid amount." : "Zadejte validní množství.");
+            newErrors.amount = (language === "EN" ? "Enter a valid amount" : "Zadejte validní množství");
             valid = false;
         }
 
@@ -127,7 +130,7 @@ export default function AddItemModal({
                         mode="outlined"
                     />
                     {errors.name ? (
-                        <HelperText type="error">{errors.name}</HelperText>
+                        <HelperText type="error" style={{ marginLeft: -10 }}>{errors.name}</HelperText>
                     ) : null}
 
                     <TextInput
@@ -140,7 +143,7 @@ export default function AddItemModal({
                         style={{ marginTop: 10 }}
                     />
                     {errors.amount ? (
-                        <HelperText type="error">{errors.amount}</HelperText>
+                        <HelperText type="error" style={{ marginLeft: -10 }}>{errors.amount}</HelperText>
                     ) : null}
 
                     <View style={{ marginTop: 10 }}>
@@ -158,7 +161,7 @@ export default function AddItemModal({
                 <Divider style={{ marginBottom: 25 }} />
 
                 <Dialog.Actions>
-                    <Button onPress={onDismiss} textColor="white">{language === "EN" ? "Cancel" : "Zrušit"} </Button>
+                    <Button onPress={() => { onDismiss(), setErrors(defaultErrors) }} textColor="white">{language === "EN" ? "Cancel" : "Zrušit"} </Button>
                     <Button mode="contained" onPress={handleAddItem} buttonColor="lightgreen" textColor="darkgreen"
                         style={{ width: 80 }}>
                         {language === "EN" ? "Add" : "Přidat"}
