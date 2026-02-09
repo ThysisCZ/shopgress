@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { StyleSheet, View, ScrollView, Text, TextInput, TouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, View, ScrollView, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { TextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useUserContext } from '../context/UserContext';
 import { useLanguageContext } from '../context/LanguageContext';
@@ -99,6 +100,7 @@ export default function LoginScreen() {
                     <Text style={styles.formLabel}>Email:</Text>
                     <TextInput
                         style={styles.input}
+                        textColor="black"
                         value={formData.email}
                         onChangeText={(val) => setField("email", val)}
                         maxLength={60}
@@ -118,6 +120,7 @@ export default function LoginScreen() {
                     <View style={styles.inputWrapper}>
                         <TextInput
                             style={styles.input}
+                            textColor="black"
                             value={formData.password}
                             onChangeText={(val) => setField("password", val)}
                             maxLength={20}
@@ -252,12 +255,14 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         borderWidth: 1,
+        backgroundColor: 'white',
         borderColor: '#ccc',
         borderRadius: 4,
         paddingHorizontal: 12,
         paddingVertical: 8,
         fontSize: 16,
         paddingRight: 50,
+        height: 25
     },
     togglePasswordBtn: {
         position: 'absolute',

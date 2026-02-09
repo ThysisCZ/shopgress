@@ -3,7 +3,8 @@ import { useLanguageContext } from '../context/LanguageContext';
 import { useRouter } from 'expo-router';
 import { useModeContext } from '@/context/ModeContext';
 
-import { StyleSheet, View, ScrollView, Text, TextInput, TouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, View, ScrollView, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { TextInput } from 'react-native-paper';
 
 interface EmailData {
     success: boolean,
@@ -28,6 +29,8 @@ export default function ForgotPassword() {
     const [emailCall, setEmailCall] = useState<{ state: string; data?: EmailData; error?: string }>({ state: "inactive" });
     const [message, setMessage] = useState({ type: '', text: '' });
 
+    const emailRegEx = /^\S+@\S+\.\S+$/;
+
     const setField = (name: string, val: string) => {
         setFormData((formData) => ({ ...formData, [name]: val }));
     };
@@ -38,7 +41,7 @@ export default function ForgotPassword() {
         setValidated(true)
 
         // Check if form is valid before sending
-        if (!formData.email) return;
+        if (!formData.email || !emailRegEx.test(formData.email)) return;
 
         try {
             setEmailCall({ state: "pending" })
@@ -99,6 +102,7 @@ export default function ForgotPassword() {
                     <Text style={styles.formLabel}>Email:</Text>
                     <TextInput
                         style={styles.input}
+                        textColor="black"
                         value={formData.email}
                         onChangeText={(val) => setField("email", val)}
                         maxLength={60}
@@ -107,6 +111,11 @@ export default function ForgotPassword() {
                     {validated && formData.email.length === 0 && (
                         <Text style={{ color: '#721c24' }}>
                             {currentLanguage?.id === "EN" ? "This field is required" : "Toto pole je povinné"}
+                        </Text>
+                    )}
+                    {validated && formData.email && !emailRegEx.test(formData.email) && (
+                        <Text style={{ color: '#721c24' }}>
+                            {currentLanguage?.id === "EN" ? "Enter a valid email" : "Zadejte validní email"}
                         </Text>
                     )}
                 </View>
@@ -194,12 +203,14 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         borderWidth: 1,
+        backgroundColor: 'white',
         borderColor: '#ccc',
         borderRadius: 4,
         paddingHorizontal: 12,
         paddingVertical: 8,
         fontSize: 16,
         paddingRight: 50,
+        height: 25
     },
     successMessage: {
         padding: 12,

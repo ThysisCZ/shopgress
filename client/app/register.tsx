@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { StyleSheet, View, ScrollView, Text, TextInput, TouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, View, ScrollView, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { TextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useUserContext } from '../context/UserContext';
 import { useLanguageContext } from '../context/LanguageContext';
@@ -38,6 +39,9 @@ export default function SignUpScreen() {
     const { currentLanguage } = useLanguageContext();
     const { mode } = useModeContext();
     const router = useRouter();
+
+    const emailRegEx = /^\S+@\S+\.\S+$/;
+    const passwordRegEx = /(?=.*[a-z]+)(?=.*[A-Z]+)(?=.*\d+).*/;
 
     // Navigate to lists after registering
     useEffect(() => {
@@ -105,6 +109,7 @@ export default function SignUpScreen() {
                     </Text>
                     <TextInput
                         style={styles.input}
+                        textColor="black"
                         value={formData.name}
                         onChangeText={(val) => setField("name", val)}
                         maxLength={20}
@@ -120,6 +125,7 @@ export default function SignUpScreen() {
                     <Text style={styles.formLabel}>Email:</Text>
                     <TextInput
                         style={styles.input}
+                        textColor="black"
                         value={formData.email}
                         onChangeText={(val) => setField("email", val)}
                         maxLength={60}
@@ -128,6 +134,11 @@ export default function SignUpScreen() {
                     {validated && formData.email.length === 0 && (
                         <Text style={{ color: '#721c24' }}>
                             {currentLanguage?.id === "EN" ? "This field is required" : "Toto pole je povinné"}
+                        </Text>
+                    )}
+                    {validated && formData.email && !emailRegEx.test(formData.email) && (
+                        <Text style={{ color: '#721c24' }}>
+                            {currentLanguage?.id === "EN" ? "Enter a valid email" : "Zadejte validní email"}
                         </Text>
                     )}
                 </View>
@@ -139,6 +150,7 @@ export default function SignUpScreen() {
                     <View style={styles.inputWrapper}>
                         <TextInput
                             style={styles.input}
+                            textColor="black"
                             value={formData.password}
                             onChangeText={(val) => setField("password", val)}
                             maxLength={20}
@@ -158,6 +170,16 @@ export default function SignUpScreen() {
                     {validated && formData.password.length === 0 && (
                         <Text style={{ color: '#721c24' }}>
                             {currentLanguage?.id === "EN" ? "This field is required" : "Toto pole je povinné"}
+                        </Text>
+                    )}
+                    {validated && formData.password && formData.password.length < 8 && (
+                        <Text style={{ color: '#721c24' }}>
+                            {currentLanguage?.id === "EN" ? "At least 8 characters are required" : "Heslo musí mít alespoň 8 znaků"}
+                        </Text>
+                    )}
+                    {validated && formData.password && !passwordRegEx.test(formData.password) && (
+                        <Text style={{ color: '#721c24' }}>
+                            {currentLanguage?.id === "EN" ? "Include uppercase, lowercase and numbers" : "Zadejte velká a malá písmena včetně číslic"}
                         </Text>
                     )}
                 </View>
@@ -270,12 +292,14 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         borderWidth: 1,
+        backgroundColor: 'white',
         borderColor: '#ccc',
         borderRadius: 4,
         paddingHorizontal: 12,
         paddingVertical: 8,
         fontSize: 16,
         paddingRight: 50,
+        height: 25
     },
     togglePasswordBtn: {
         position: 'absolute',

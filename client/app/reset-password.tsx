@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useLanguageContext } from '../context/LanguageContext';
 import { useModeContext } from '@/context/ModeContext';
 
-import { StyleSheet, View, ScrollView, Text, TextInput, TouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, View, ScrollView, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { TextInput } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -34,6 +35,8 @@ export default function ForgotPassword() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [email, setEmail] = useState<string | string[]>('');
+
+    const passwordRegEx = /(?=.*[a-z]+)(?=.*[A-Z]+)(?=.*\d+).*/;
 
     useEffect(() => {
         // Get email from params
@@ -151,6 +154,7 @@ export default function ForgotPassword() {
                     <Text style={styles.formLabel}>{currentLanguage.id === "EN" ? "Reset code" : "Potvrzovací kód"}:</Text>
                     <TextInput
                         style={styles.input}
+                        textColor="black"
                         value={formData.code}
                         onChangeText={(val) => setField("code", val)}
                         maxLength={6}
@@ -170,6 +174,7 @@ export default function ForgotPassword() {
                     <View style={styles.inputWrapper}>
                         <TextInput
                             style={styles.input}
+                            textColor="black"
                             value={formData.newPassword}
                             onChangeText={(val) => setField("newPassword", val)}
                             maxLength={20}
@@ -191,6 +196,16 @@ export default function ForgotPassword() {
                             {currentLanguage?.id === "EN" ? "This field is required" : "Toto pole je povinné"}
                         </Text>
                     )}
+                    {validated && formData.newPassword && formData.newPassword.length < 8 && (
+                        <Text style={{ color: '#721c24' }}>
+                            {currentLanguage?.id === "EN" ? "At least 8 characters are required" : "Heslo musí mít alespoň 8 znaků"}
+                        </Text>
+                    )}
+                    {validated && formData.newPassword && !passwordRegEx.test(formData.newPassword) && (
+                        <Text style={{ color: '#721c24' }}>
+                            {currentLanguage?.id === "EN" ? "Include uppercase, lowercase and numbers" : "Zadejte velká a malá písmena včetně číslic"}
+                        </Text>
+                    )}
                 </View>
 
                 <View style={{ marginBottom: 24 }}>
@@ -200,6 +215,7 @@ export default function ForgotPassword() {
                     <View style={styles.inputWrapper}>
                         <TextInput
                             style={styles.input}
+                            textColor="black"
                             value={formData.confirmPassword}
                             onChangeText={(val) => setField("confirmPassword", val)}
                             maxLength={20}
@@ -288,12 +304,14 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         borderWidth: 1,
+        backgroundColor: 'white',
         borderColor: '#ccc',
         borderRadius: 4,
         paddingHorizontal: 12,
         paddingVertical: 8,
         fontSize: 16,
         paddingRight: 50,
+        height: 25
     },
     togglePasswordBtn: {
         position: 'absolute',
